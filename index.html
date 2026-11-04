@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Life Relay ─ 生命の巡り</title>
+<style>
+  :root{
+    --bg:#f6f1e7; --card:#fffdf8; --ink:#2d2a26; --sub:#7a7266; --line:#e6ddcc;
+    --accent:#2f7d6d; --accent2:#c8643b; --good:#2f7d6d; --bad:#b0413e; --big:#6b4fa0; --choice:#2f6fb0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;line-height:1.55}
+  button{font:inherit;cursor:pointer}
+  button:disabled{opacity:.4;cursor:default}
+  [hidden]{display:none!important}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  h1,h2,h3{margin:0 0 8px}
+  h3{font-size:14px;color:var(--sub);font-weight:600;letter-spacing:.05em}
+  small{color:var(--sub)}
+  .btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-weight:600}
+  .btn:hover:not(:disabled){filter:brightness(1.08)}
+  .btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+
+  /* タイトル */
+  #title-screen{max-width:760px;margin:0 auto;padding:36px 20px 60px}
+  .hero{text-align:center;margin-bottom:24px}
+  .hero h1{font-size:46px;letter-spacing:.08em;margin-bottom:0;font-family:Georgia,"Times New Roman",serif}
+  .hero .subtitle{font-size:18px;letter-spacing:.3em;color:var(--accent);margin-bottom:10px}
+  .hero .tag{color:var(--sub)}
+  .hero .globe{font-size:52px;display:inline-block;animation:spin 6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .setup{display:grid;gap:16px}
+  .lbl{font-weight:600;margin-bottom:6px;display:block}
+  .setup input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:16px}
+  .opts{display:flex;flex-wrap:wrap;gap:8px}
+  .opts label{border:1px solid var(--line);border-radius:10px;padding:7px 12px;background:#fff;cursor:pointer;font-size:14px}
+  .opts input{margin-right:6px}
+  .opts label:has(input:checked){border-color:var(--accent);background:#eaf5f2}
+  .start-row{text-align:center}
+  .start-row .btn{font-size:20px;padding:14px 44px;border-radius:999px}
+  .note{font-size:12.5px;color:var(--sub)}
+  #past ul{padding:0;margin:0} #past li{list-style:none;font-size:13px;padding:4px 0;border-bottom:1px dashed var(--line)}
+
+  /* ゲーム */
+  .topbar{position:sticky;top:0;z-index:5;background:rgba(246,241,231,.96);display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .brand{font-weight:700;letter-spacing:.1em}
+  .speed{display:flex;gap:4px;flex-wrap:wrap}
+  .speed button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 10px;font-size:13px}
+  .speed button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .autolbl{font-size:13px;display:flex;align-items:center;gap:4px}
+  .agebox{margin-left:auto;font-size:28px;font-weight:700}
+  .agebox small{font-size:13px;margin-left:6px;font-weight:400}
+  .progress{height:4px;background:var(--line)}
+  #prog{height:100%;width:0;background:var(--accent);transition:width .1s linear}
+  .grid{display:grid;grid-template-columns:290px minmax(0,1fr) 290px;gap:12px;padding:12px 16px;max-width:1450px;margin:0 auto}
+  @media (max-width:1100px){.grid{grid-template-columns:1fr 1fr}.center{grid-column:1/-1;order:-1}}
+  .mstat,.mnav{display:none}
+  .col{display:grid;gap:12px;align-content:start}
+  .who{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+  .who .avatar{font-size:40px}
+  .who .nm{font-size:19px;font-weight:700}
+  .stat{margin:5px 0}
+  .stat .row{display:flex;justify-content:space-between;font-size:13px}
+  .bar{height:8px;background:#efe8da;border-radius:8px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:8px;transition:width .4s}
+  dl.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:8px 0 0;font-size:13.5px}
+  dl.kv dt{color:var(--sub)} dl.kv dd{margin:0;text-align:right}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{flex:1;min-width:92px;border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:8px 6px;text-align:center;font-size:13px}
+  .seg button .i{font-size:20px;display:block}
+  .seg button small{display:block;font-size:10.5px}
+  .seg button.on{border-color:var(--accent);background:#eaf5f2}
+  .actions{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+  .actions button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 8px;text-align:left;font-size:13px}
+  .actions button:hover:not(:disabled){border-color:var(--choice)}
+  .actions button small{display:block;font-size:11px}
+  .act-note{font-size:12px;color:var(--sub);margin:4px 0 8px}
+  #log{list-style:none;padding:0;margin:0;max-height:46vh;overflow:auto}
+  #log li{display:flex;gap:8px;padding:6px 2px;border-bottom:1px solid #f0e9dc;font-size:13.5px;animation:fadein .35s}
+  #log li .a{min-width:40px;color:var(--sub);font-variant-numeric:tabular-nums}
+  #log li .k{font-size:10px;border-radius:6px;padding:0 5px;height:17px;line-height:17px;white-space:nowrap}
+  #log li .k.c{background:#e3eefa;color:var(--choice)} #log li .k.f{background:#f3e8e1;color:var(--accent2)}
+  #log li.good{color:var(--good)} #log li.bad{color:var(--bad)} #log li.big{color:var(--big);font-weight:600}
+  @keyframes fadein{from{opacity:0;transform:translateY(-3px)}to{opacity:1}}
+  #map{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}
+  #map div{aspect-ratio:1;border-radius:4px;background:#efe8da;font-size:10.5px;display:flex;align-items:center;justify-content:center}
+  #map div.now{outline:2px solid var(--ink)}
+  #surv svg{width:100%;height:auto}
+  #others{list-style:none;padding:0;margin:0}
+  #others li{padding:7px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+  #others li .s{color:var(--sub);font-size:12px}
+  .helpbtn{margin-top:4px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:2px 10px;font-size:12px}
+  .helpbtn:hover:not(:disabled){border-color:var(--accent2)}
+  .gens{display:grid;gap:10px}
+  .genc{border-left:6px solid var(--accent)}
+  .genc .h{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+  .kidpick{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+  .kidpick button{border:2px solid var(--line);background:linear-gradient(#fff,#f2f7f4);border-radius:14px;padding:14px 10px;text-align:center}
+  .kidpick button:hover{border-color:var(--accent)}
+  .kidpick .ji{font-size:30px;display:block}
+  .genbadge{display:inline-block;background:var(--accent);color:#fff;border-radius:999px;padding:0 10px;font-size:12px;margin-left:6px;vertical-align:middle}
+  .gone{opacity:.5}
+  .foot{text-align:center;font-size:12px;color:var(--sub);padding:16px}
+  .foot a{color:var(--accent)}
+
+  /* モーダル */
+  #modal{position:fixed;inset:0;background:rgba(40,35,28,.45);display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
+  #modal .box{background:var(--card);border-radius:18px;max-width:540px;width:100%;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.2);animation:pop .22s;max-height:92vh;overflow:auto}
+  @keyframes pop{from{transform:scale(.95);opacity:0}to{transform:none;opacity:1}}
+  #modal h2{font-size:19px}
+  .choices{display:grid;gap:8px;margin-top:14px}
+  .choices button{text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:11px 14px}
+  .choices button:hover{border-color:var(--choice)}
+  .choices button small{display:block}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px}
+  .cards button{border:2px solid var(--line);background:linear-gradient(#fff,#f7f1e4);border-radius:14px;padding:14px 10px;text-align:center}
+  .cards button:hover{border-color:var(--choice)}
+  .cards .ji{font-size:32px;display:block}
+  .cards small{display:block}
+  .roulette{font-size:28px;font-weight:700;text-align:center;padding:18px 0;min-height:80px}
+  .q{background:#f3ecdf;border-radius:12px;padding:10px 14px;margin-top:10px;font-size:14px}
+
+  /* 結果 */
+  #end-screen{max-width:860px;margin:0 auto;padding:28px 18px 60px}
+  .epitaph{text-align:center;padding:26px 20px}
+  .epitaph .icon{font-size:46px}
+  .epitaph h1{font-size:30px}
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:14px 0}
+  .fact{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .fact b{display:block;font-size:19px} .fact span{font-size:12px;color:var(--sub)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  @media (max-width:640px){.two{grid-template-columns:1fr}}
+  .two ul{margin:0;padding-left:18px;font-size:13.5px}
+  #end-map{display:grid;grid-template-columns:repeat(20,1fr);gap:2px;margin-top:6px}
+  #end-map div{aspect-ratio:1;border-radius:3px;font-size:9px;display:flex;align-items:center;justify-content:center}
+  .end-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+  /* ---------- スマホ ---------- */
+  @media (max-width:700px){
+    body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+    .grid{grid-template-columns:1fr;padding:10px 10px 4px;gap:10px}
+    .grid>section{display:none}
+    .grid[data-tab="life"]>[data-pane="life"],.grid[data-tab="me"]>[data-pane="me"],.grid[data-tab="world"]>[data-pane="world"]{display:grid}
+    .topbar{padding:6px 10px;gap:6px}
+    .brand{display:none}
+    .agebox{order:-1;margin-left:0;font-size:24px}
+    .autolbl{margin-left:auto;font-size:14px;padding:6px 4px}
+    .autolbl input{width:20px;height:20px}
+    .speed{order:3;width:100%;flex-wrap:nowrap;overflow-x:auto;gap:5px;-webkit-overflow-scrolling:touch}
+    .speed button{flex:none;min-height:38px;padding:4px 11px;font-size:14px}
+    .speed button small{display:none}
+    .mstat{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:8px;align-items:center;padding:6px 10px;background:var(--card);border-bottom:1px solid var(--line);order:4;width:calc(100% + 20px);margin:0 -10px -6px;font-size:11px;border-top:1px solid var(--line)}
+    .mstat .bar{height:6px}
+    .mstat .mm{font-weight:700;font-size:12.5px;white-space:nowrap}
+    .mnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:15;background:rgba(255,253,248,.98);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+    .mnav button{flex:1;border:none;background:none;padding:8px 0 10px;font-size:12px;color:var(--sub);position:relative}
+    .mnav button span{display:block;font-size:22px;line-height:1.2}
+    .mnav button.on{color:var(--accent);font-weight:700}
+    .mnav i{position:absolute;top:6px;right:calc(50% - 22px);width:9px;height:9px;border-radius:50%;background:var(--accent2)}
+    .seg button{min-width:0;flex:1 1 30%;padding:10px 4px;min-height:64px}
+    .actions{grid-template-columns:1fr 1fr}
+    .actions button{min-height:52px;padding:8px}
+    #log{max-height:none}
+    #log li{font-size:14px}
+    .foot{padding:10px 10px 4px}
+    .card{padding:12px}
+    .helpbtn{padding:7px 14px;font-size:13px}
+    .others-card{order:-1}
+    /* モーダルは下から出るシート */
+    #modal{align-items:flex-end;padding:0}
+    #modal .box{border-radius:20px 20px 0 0;max-height:88vh;padding:20px 16px calc(18px + env(safe-area-inset-bottom));animation:sheet .25s}
+    .choices button{padding:14px;min-height:52px;font-size:15px}
+    .cards{grid-template-columns:1fr 1fr}
+    .cards button{padding:12px 6px}
+    #title-screen{padding:24px 14px 40px}
+    .hero h1{font-size:34px}
+    .start-row .btn{width:100%}
+    .opts label{padding:10px 12px}
+    #end-screen{padding:16px 10px 40px}
+    #end-map{grid-template-columns:repeat(10,1fr)}
+  }
+  @keyframes sheet{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- ================= タイトル ================= -->
+<div id="title-screen">
+  <div class="hero">
+    <div class="globe">🌏</div>
+    <h1>Life Relay</h1>
+    <div class="subtitle">─ 生命の巡り ─</div>
+    <div class="tag">自分の生まれは選べない。<br>でも、あなたの選択は、子どもの「生まれ」になる。</div>
+  </div>
+  <div class="setup card">
+    <div><label class="lbl" for="name">あなたの名前</label><input type="text" id="name" maxlength="12" placeholder="例：ひかり"></div>
+    <div><span class="lbl">生まれる国の決まり方</span>
+      <div class="opts">
+        <label><input type="radio" name="mode" value="births" checked>いま生まれる赤ちゃんの数に比例</label>
+        <label><input type="radio" name="mode" value="pop">いま生きている人の数に比例</label>
+      </div></div>
+    <div><span class="lbl">時間の流れ</span>
+      <small>1年は 1×で約40秒、2×で約20秒です。遊んでいる途中でも 4×・8× や一時停止、「次の選択まで」の早送りに切り替えられます。</small></div>
+    <div class="opts"><label><input type="checkbox" id="gentle">重い出来事の表現を控えめにする</label></div>
+    <div class="start-row"><button class="btn" id="start">生まれる</button></div>
+    <div class="note">
+      <b>遊び方</b>：時間は自動で流れます。毎年「今年の重点」と「暮らし方」を選び、「今年の行動」で旅行・投資・家・転職・移住などを1年に1回まで選べます。
+      人生の節目では、進学・仕事・結婚・家族・引退などの大きな選択がやってきます。
+      最後に「自分で選んだこと」と「生まれや運で決まったこと」をふり返ります。<br>
+      🌳 <b>世代をつなぐ</b>：人生が終わったら、子どもの一人として続けられます。あなたの学び・お金・移住などの選択が、子どもの生まれる国や家の豊かさ、受け継ぐものを決めます。<br>
+      🤲 <b>同じ瞬間に生まれた4人</b>：世界のどこかで同時に生まれた4人から便りが届き、ときには出会います。15歳からは支援を送ることができ、その人の人生や寿命が変わることがあります。<br><br>
+      ※ 国の数値（出生数・人口・平均寿命・乳児死亡率・所得・格差・就学状況など）は国連・世界銀行などの公開統計をもとにした<b>おおよその値</b>です。ゲームとして単純化しており、実際の人生を予測するものではありません。
+    </div>
+  </div>
+  <div id="past" class="card" style="margin-top:14px" hidden><h3>これまでの人生</h3><ul id="past-list"></ul></div>
+</div>
+
+<!-- ================= ゲーム ================= -->
+<div id="game" hidden>
+  <header class="topbar">
+    <div class="brand">Life Relay <small>生命の巡り</small></div>
+    <div class="speed" id="speed">
+      <button data-s="0" title="一時停止">⏸</button>
+      <button data-s="1" class="on" title="1年＝約40秒">1× <small>40秒</small></button>
+      <button data-s="2" title="1年＝約20秒">2× <small>20秒</small></button>
+      <button data-s="4" title="1年＝約10秒">4× <small>10秒</small></button>
+      <button data-s="8" title="1年＝約5秒">8× <small>5秒</small></button>
+      <button id="step">次の年 ▶</button>
+      <button id="skip">次の選択まで ⏭</button>
+    </div>
+    <label class="autolbl"><input type="checkbox" id="auto">おまかせ</label>
+    <div class="agebox"><span id="age">0</span>歳<small id="yearlbl"></small></div>
+    <div id="mstat" class="mstat"></div>
+  </header>
+  <div class="progress"><div id="prog"></div></div>
+  <main class="grid" id="panes" data-tab="life">
+    <section class="col" data-pane="me"><div class="card" id="profile"></div></section>
+    <section class="col center" data-pane="life">
+      <div class="card">
+        <h3>今年の重点</h3>
+        <div class="seg" id="focus-btns"></div>
+        <small id="focus-note"></small>
+      </div>
+      <div class="card" id="spend-card">
+        <h3>暮らし方</h3>
+        <div class="seg" id="spend-btns"></div>
+      </div>
+      <div class="card" id="act-card">
+        <h3>今年の行動 <small id="act-left"></small></h3>
+        <div class="act-note">1年に1回まで。選ぶと時間が止まります。</div>
+        <div class="actions" id="actions"></div>
+      </div>
+      <div class="card">
+        <h3>人生の記録 <small>（<span style="color:var(--choice)">選択</span>＝自分で選んだこと ／ <span style="color:var(--accent2)">運命</span>＝生まれや運で決まったこと）</small></h3>
+        <ul id="log"></ul>
+      </div>
+    </section>
+    <section class="col" data-pane="world">
+      <div class="card"><h3>人生地図</h3><div id="map"></div><small>1マス＝1年。色は幸福度（暖色ほど幸せ）</small></div>
+      <div class="card"><h3>生存曲線</h3><div id="surv"></div></div>
+      <div class="card others-card"><h3>同じ瞬間に生まれた4人</h3><ul id="others"></ul></div>
+    </section>
+  </main>
+  <div class="foot">つらい気持ちになったときは、一人で抱えこまずに相談してください →
+    <a href="https://www.mhlw.go.jp/mamorouyokokoro/" target="_blank" rel="noopener">まもろうよ こころ（厚生労働省）</a></div>
+  <nav class="mnav" id="mnav">
+    <button data-tab="life" class="on"><span>🌱</span>人生</button>
+    <button data-tab="me"><span>👤</span>わたし</button>
+    <button data-tab="world"><span>🌍</span>世界と4人<i id="world-dot" hidden></i></button>
+  </nav>
+</div>
+
+<div id="end-screen" hidden></div>
+<div id="modal" hidden><div class="box" id="modal-box"></div></div>
+
+<script>
+/* ============================================================
+   ユーティリティ
+   ============================================================ */
+const $=s=>document.querySelector(s);
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const chance=p=>Math.random()<p;
+function weightedPick(arr,wf){const ws=arr.map(wf);let r=Math.random()*ws.reduce((a,b)=>a+b,0);for(let i=0;i<arr.length;i++){r-=ws[i];if(r<=0)return arr[i];}return arr[arr.length-1];}
+function normInv(p){
+  const a=[-39.69683028665376,220.9460984245205,-275.9285104469687,138.357751867269,-30.66479806614716,2.506628277459239];
+  const b=[-54.47609879822406,161.5858368580409,-155.6989798598866,66.80131188771972,-13.28068155288572];
+  const c=[-0.007784894002430293,-0.3223964580411365,-2.400758277161838,-2.549732539343734,4.374664141464968,2.938163982698783];
+  const d=[0.007784695709041462,0.3224671290700398,2.445134137142996,3.754408661907416];
+  p=Math.min(Math.max(p,1e-6),1-1e-6);const pl=0.02425;let q,r;
+  if(p<pl){q=Math.sqrt(-2*Math.log(p));return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  if(p>1-pl){q=Math.sqrt(-2*Math.log(1-p));return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  q=p-0.5;r=q*q;return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+}
+
+/* ============================================================
+   国データ（おおよその値）
+   births 年間出生数(百万) / pop 人口(百万) / le 平均寿命 / imr 乳児死亡率(‰)
+   gdp 1人あたりGDP(購買力平価・千ドル) / gini ジニ係数 / edu 教育の届きやすさ
+   conflict 紛争リスク / malaria 感染症リスク / disaster 自然災害リスク
+   ============================================================ */
+const C=(id,name,region,births,pop,le,imr,gdp,gini,edu,conflict=0,malaria=0,disaster=.3)=>({id,name,region,births,pop,le,imr,gdp,gini,edu,conflict,malaria,disaster});
+const COUNTRIES=[
+  C('IN','インド','南アジア',23.0,1430,72,26,9.0,33,.62,.1,.3,.5),
+  C('CN','中国','東アジア',9.0,1410,78,5,23,37,.82,0,0,.4),
+  C('NG','ナイジェリア','西アフリカ',7.8,225,54,70,5.5,35,.42,.3,1,.3),
+  C('PK','パキスタン','南アジア',6.3,240,67,52,6.4,30,.40,.2,.2,.5),
+  C('CD','コンゴ民主共和国','中部アフリカ',4.6,102,60,62,1.4,42,.30,.6,1,.3),
+  C('ID','インドネシア','東南アジア',4.5,278,71,18,15,38,.72,0,.2,.6),
+  C('ET','エチオピア','東アフリカ',3.9,127,66,34,2.9,35,.30,.4,.6,.4),
+  C('US','アメリカ','北アメリカ',3.6,335,78,5.4,80,40,.95,0,0,.4),
+  C('BD','バングラデシュ','南アジア',3.0,172,73,23,8.6,32,.55,0,.1,.8),
+  C('BR','ブラジル','南アメリカ',2.6,216,76,13,20,52,.75,0,.1,.3),
+  C('TZ','タンザニア','東アフリカ',2.2,67,66,33,3.0,40,.35,0,1,.3),
+  C('EG','エジプト','北アフリカ',2.1,112,71,16,17,32,.65,0,0,.2),
+  C('MX','メキシコ','中央アメリカ',1.9,128,75,11,23,45,.75,.2,0,.5),
+  C('PH','フィリピン','東南アジア',1.8,117,72,21,11,41,.70,.1,.1,.8),
+  C('UG','ウガンダ','東アフリカ',1.6,48,63,31,2.8,43,.35,0,1,.3),
+  C('KE','ケニア','東アフリカ',1.5,55,63,30,5.7,39,.50,0,.8,.4),
+  C('AF','アフガニスタン','南アジア',1.4,42,63,43,2.0,30,.25,.6,.2,.4),
+  C('SD','スーダン','北アフリカ',1.4,48,66,38,3.8,34,.30,.8,.7,.3),
+  C('VN','ベトナム','東南アジア',1.4,99,75,15,13,36,.75,0,.1,.6),
+  C('AO','アンゴラ','中部アフリカ',1.3,36,62,45,7.0,51,.35,.1,1,.2),
+  C('RU','ロシア','東ヨーロッパ',1.2,144,70,4,35,36,.88,.3,0,.2),
+  C('IR','イラン','西アジア',1.1,89,77,11,18,35,.70,.1,0,.5),
+  C('IQ','イラク','西アジア',1.1,45,72,21,11,30,.50,.4,0,.2),
+  C('NE','ニジェール','西アフリカ',1.1,27,62,60,1.5,37,.15,.3,1,.4),
+  C('MZ','モザンビーク','東アフリカ',1.1,34,60,50,1.5,54,.30,.3,1,.6),
+  C('TR','トルコ','西アジア',1.0,85,78,8,38,42,.78,.05,0,.5),
+  C('ZA','南アフリカ','南部アフリカ',1.0,62,62,25,15,63,.62,0,.1,.2),
+  C('YE','イエメン','西アジア',1.0,34,64,44,2.5,37,.25,.8,.3,.3),
+  C('MM','ミャンマー','東南アジア',0.9,54,67,34,5.0,31,.45,.6,.4,.6),
+  C('ML','マリ','西アフリカ',0.9,23,59,60,2.5,36,.20,.4,1,.3),
+  C('JP','日本','東アジア',0.73,124,84.5,1.7,46,33,.97,0,0,.7),
+  C('DE','ドイツ','西ヨーロッパ',0.69,84,81,3,65,32,.95,0,0,.1),
+  C('GB','イギリス','西ヨーロッパ',0.68,68,81,4,55,33,.95,0,0,.1),
+  C('FR','フランス','西ヨーロッパ',0.68,68,83,3.4,55,31,.95,0,0,.1),
+  C('CO','コロンビア','南アメリカ',0.6,52,77,12,18,54,.70,.2,.1,.3),
+  C('SA','サウジアラビア','西アジア',0.6,37,77,6,60,45,.78,0,0,.1),
+  C('AU','オーストラリア','オセアニア',0.3,26,83.5,3,62,34,.96,0,0,.3),
+  C('HT','ハイチ','カリブ海',0.27,11.7,64,46,3.0,41,.35,.5,.2,.7),
+  C('KR','韓国','東アジア',0.23,52,84,2.5,50,33,.97,0,0,.2),
+  C('UA','ウクライナ','東ヨーロッパ',0.2,38,71,7,13,26,.85,.8,0,.1),
+  C('SE','スウェーデン','北ヨーロッパ',0.1,10.5,83,2,62,29,.96,0,0,.05),
+];
+const REGION_ICON=r=>/アフリカ|西アジア|ヨーロッパ/.test(r)?'🌍':/アメリカ|カリブ/.test(r)?'🌎':'🌏';
+const DISASTER={JP:['大きな地震','台風'],BD:['大洪水','サイクロン'],PH:['大型台風','火山の噴火'],IN:['洪水','猛暑'],ID:['地震','洪水'],CN:['洪水','地震'],US:['ハリケーン','山火事'],MX:['地震','ハリケーン'],HT:['地震','ハリケーン'],AU:['山火事','干ばつ'],TR:['大きな地震'],IR:['地震'],VN:['台風','洪水'],MM:['サイクロン'],MZ:['サイクロン','洪水'],PK:['大洪水','猛暑']};
+const NAMES={
+  JP:[['ハルト','ソウタ','ユウマ'],['ユイ','ミオ','サクラ']],CN:[['ハオ','ウェイ','ズーハン'],['メイ','シンイー','ユーシー']],KR:[['ミンジュン','ドユン','ソジュン'],['ソヨン','ジウ','ハウン']],
+  '南アジア':[['アーラヴ','ラフル','イムラン','アルジュン'],['プリヤ','アーイシャ','ディヤ','ファリハ']],'東南アジア':[['アディ','ミン','ホセ','ブディ'],['シティ','リン','マリア','アユ']],
+  'アフリカ':[['チディ','ジュマ','コフィ','ムサ','アベベ'],['アマラ','ザウディ','ファトゥ','ニア','ハディザ']],'中東':[['オマル','アリ','ユスフ','メフメト'],['ファーティマ','レイラ','ザイナブ','エリフ']],
+  'ヨーロッパ':[['ルカ','ノア','マクシム','エリック'],['エマ','ソフィア','アンナ','オルガ']],'アメリカ':[['マテオ','リアム','ジャン','ガブリエル'],['オリヴィア','カミラ','ヴァレンティナ','ソフィア']],'オセアニア':[['ジャック','オリバー'],['シャーロット','アメリア']],
+};
+function nameGroup(c){
+  if(NAMES[c.id])return NAMES[c.id];
+  if(['EG','SD','IQ','IR','TR','SA','YE'].includes(c.id))return NAMES['中東'];
+  for(const k of ['アフリカ','南アジア','東南アジア','ヨーロッパ','オセアニア'])if(c.region.includes(k))return NAMES[k];
+  return NAMES['アメリカ'];
+}
+const pickName=(c,sex)=>pick(nameGroup(c)[sex==='male'?0:1]);
+
+/* ============================================================
+   所得・寿命モデル
+   ============================================================ */
+const meanInc=c=>c.gdp*1000*0.55;           // 平均所得(PPPドル)
+const M=c=>meanInc(c)*100;                   // 日本の物価での体感額(円)
+const sigmaOf=c=>Math.SQRT2*normInv((c.gini/100+1)/2);
+function incomeAt(c,p){const s=sigmaOf(c);return meanInc(c)*Math.exp(s*normInv(p)-s*s/2);}
+const WORLD=(()=>{const arr=[],tot=COUNTRIES.reduce((a,c)=>a+c.pop,0);for(const c of COUNTRIES){const n=Math.max(3,Math.round(c.pop/tot*20000));for(let i=0;i<n;i++)arr.push(incomeAt(c,(i+.5)/n));}return arr.sort((a,b)=>a-b);})();
+function worldPct(inc){let lo=0,hi=WORLD.length;while(lo<hi){const m=(lo+hi)>>1;if(WORLD[m]<inc)lo=m+1;else hi=m;}return lo/WORLD.length*100;}
+function yen(y){const s=y<0?'-':'';y=Math.abs(y);if(y>=1e8)return s+(y/1e8).toFixed(1)+'億円';if(y>=1e4)return s+Math.round(y/1e4).toLocaleString()+'万円';return s+(Math.round(y/100)*100).toLocaleString()+'円';}
+function buildQx(c,sex){
+  const target=c.le+(sex==='female'?2.6:-2.6),imr=c.imr/1000,child=imr*0.3/4,base=0.0003+c.conflict*0.0012;
+  const make=a=>{const q=[];for(let x=0;x<=110;x++){let h=a*Math.exp(0.09*x)+base;if(x===0)h+=imr;else if(x<5)h+=child;q.push(Math.min(1,h));}q[110]=1;return q;};
+  const e0=q=>{let S=1,e=0;for(let x=0;x<q.length;x++){const d=S*q[x];e+=S-d*.5;S-=d;}return e;};
+  let lo=-16,hi=-2;for(let i=0;i<40;i++){const mid=(lo+hi)/2;if(e0(make(Math.exp(mid)))>target)lo=mid;else hi=mid;}
+  return make(Math.exp((lo+hi)/2));
+}
+const survival=(qx,age)=>{let S=1;for(let x=0;x<age;x++)S*=1-qx[x];return S;};
+const healthNorm=a=>62-Math.max(0,a-50)*.5-Math.max(0,a-70)*.7;
+
+/* ============================================================
+   状態
+   ============================================================ */
+let P=null,others=[],settings={yearMs:40000,mode:'births',gentle:false};
+let speed=1,elapsed=0,loopId=null,modalQueue=[],modalOpen=false,skipping=false;
+const WEALTH_LABEL=['とても苦しい','苦しい','ふつう','ゆとりがある','とても裕福'];
+const EDU_LABEL=['学校に通えなかった','小学校卒','中学校卒','高校卒','大学卒','大学院卒'];
+const SCHOOL_LABEL={primary:'小学生',middle:'中学生',high:'高校生',night:'夜間学校に通学中',uni:'大学生',ronin:'浪人中（受験勉強）',grad:'大学院生'};
+const FOCUS={
+  study:{label:'学ぶ',icon:'📚',desc:'知識↑'},
+  play:{label:'友だちと遊ぶ',icon:'⚽',desc:'絆・幸福↑'},
+  help:{label:'家の手伝い',icon:'🧺',desc:'家計を助ける'},
+  health:{label:'体を大事に',icon:'🏃',desc:'健康↑'},
+  work:{label:'仕事に打ち込む',icon:'💼',desc:'収入↑ 疲れる'},
+  people:{label:'大切な人と',icon:'🤝',desc:'絆・幸福↑'},
+  rest:{label:'のんびり',icon:'☕',desc:'幸福回復'},
+};
+const SPEND={
+  save:{label:'節約する',icon:'🪙',desc:'貯金↑ 幸福↓'},
+  normal:{label:'ふつう',icon:'🍚',desc:'バランス'},
+  rich:{label:'ゆとりを持つ',icon:'🍰',desc:'幸福・健康↑ 貯金↓'},
+};
+const MILESTONES={
+  6:'あなたの毎日のごはんは、誰が、どこから用意してくれていましたか？',
+  18:'ここまでの道のりで、自分で選べたことはどれくらいあったでしょう？',
+  40:'もし別の国に生まれていたら、いまの自分はどう違っていたと思いますか？',
+  65:'あなたが次の世代に手渡したいものは何ですか？',
+  85:'長い道のりでした。いちばん心に残っている一年はいつですか？',
+};
+const FIELDS={
+  // [職業名, アイコン, 収入の水準(0-1)]
+  med:{label:'医療',icon:'🩺',jobs:[['医師','⚕️',.88],['歯科医師','🦷',.8],['看護師','🩺',.6],['薬剤師','💊',.7],['助産師','🤱',.58],['理学療法士','🦵',.55],['臨床検査技師','🧪',.55],['獣医師','🐶',.72]]},
+  eng:{label:'工学・情報',icon:'💻',jobs:[['ソフトウェアエンジニア','💻',.78],['AI研究者','🤖',.85],['電気技術者','⚡',.65],['建築士','📐',.7],['機械設計者','⚙️',.66],['ゲーム開発者','🎮',.6],['データ分析の仕事','📊',.72],['通信技術者','📡',.62]]},
+  sci:{label:'理学',icon:'🔬',jobs:[['研究者','🔬',.68],['気象予報士','🌦',.6],['化学メーカーの研究職','⚗️',.7],['天文台の職員','🔭',.55],['大学の教員','🎓',.72]]},
+  edu:{label:'教育',icon:'🏫',jobs:[['小学校の先生','🏫',.55],['中学・高校の先生','📏',.58],['保育士','🧸',.42],['特別支援学校の先生','🤝',.55],['塾の講師','✏️',.48],['学校の事務','🗂',.45]]},
+  law:{label:'法律・政治',icon:'⚖️',jobs:[['弁護士','⚖️',.85],['裁判所の職員','🏛',.62],['国の公務員','🏢',.68],['司法書士','📜',.66],['国際機関の職員','🇺🇳',.75],['政治家の秘書','🗳',.55]]},
+  biz:{label:'経済・経営',icon:'📊',jobs:[['銀行員','🏦',.7],['商社の社員','🚢',.78],['会計士','🧮',.8],['保険会社の社員','📑',.62],['マーケター','📣',.62],['起業家','🚀',.5],['経営コンサルタント','📈',.82]]},
+  agr:{label:'農学・環境',icon:'🌱',jobs:[['農業技術者','🌾',.55],['食品メーカーの研究職','🍙',.62],['環境コンサルタント','🌍',.6],['森林の管理者','🌲',.45],['水産の研究者','🐟',.55]]},
+  wel:{label:'福祉・心理',icon:'💗',jobs:[['社会福祉士','🤲',.5],['臨床心理士','🧠',.6],['ケアマネージャー','📋',.5],['NGOの職員','🕊',.48],['児童相談所の職員','🧒',.52]]},
+  lang:{label:'国際・語学',icon:'🌐',jobs:[['通訳','🗣',.6],['翻訳家','📖',.52],['ツアーガイド','🧭',.45],['外交官','🌏',.8],['航空会社の客室乗務員','✈️',.58],['ホテルの支配人','🏨',.6]]},
+  art:{label:'芸術・メディア',icon:'🎨',jobs:[['デザイナー','🎨',.55],['音楽家','🎻',.35],['映像クリエイター','🎬',.5],['漫画家','✒️',.4],['記者','📰',.58],['写真家','📷',.42],['俳優','🎭',.3],['建築デザイナー','🏛',.6]]},
+};
+// 子どもの教育方針：edu=次世代の学校の通いやすさ / wealth=次世代の家の豊かさ / bond=次世代の絆 / myBond=自分の絆
+const EDU_POLICY={
+  free:{label:'のびのび育てる',icon:'🌻',desc:'お金はかからない。親子の絆が深まる',edu:0,wealth:0,bond:10,myBond:5,auto:1.5},
+  cram:{label:'塾や良い学校に通わせる',icon:'📚',desc:'子どもが18歳になるまで毎年お金がかかる。学びに強くなる',edu:.1,wealth:.04,bond:0,myBond:0,auto:1},
+  help:{label:'家の仕事を手伝ってもらう',icon:'🧺',desc:'家計が少し楽になる。学びは後回しになりがち',edu:-.05,wealth:0,bond:5,myBond:2,auto:.7},
+};
+const JOBS=[
+  // 0：学校にほとんど通えなかった人の仕事
+  [['農作業','🌾'],['日雇いの仕事','🧱'],['露店での物売り','🧺'],['家事の仕事','🧹'],['家畜の世話','🐐'],['漁の手伝い','🎣'],['水くみ・薪集め','🪣'],['レンガ作り','🧱'],['くず拾い','♻️'],['靴みがき','👞'],['茶畑の摘み手','🍃'],['市場の荷運び','📦']],
+  // 1：小・中学校卒の人に多い仕事
+  [['工場の仕事','🏭'],['農業','🚜'],['トラック運転手','🚚'],['商店の店番','🏪'],['建設の仕事','🏗'],['縫製の仕事','🧵'],['漁師','🐟'],['バイクタクシーの運転手','🛵'],['清掃の仕事','🧽'],['鉱山の仕事','⛏'],['倉庫の仕事','📦'],['屋台の店主','🍢'],['配達員','🚲']],
+  // 2：高校卒の人に多い仕事
+  [['店員','🛍'],['事務員','🗂'],['大工','🔨'],['介護の仕事','🤲'],['美容師','✂️'],['料理人','🍳'],['電気工事士','💡'],['自動車整備士','🔧'],['バスの運転手','🚌'],['警察官','👮'],['消防士','🚒'],['郵便局員','📮'],['コールセンターの仕事','🎧'],['パン職人','🥖'],['ホテルの受付','🛎'],['自衛官・軍人','🎖']],
+  // 3：大学卒の人に多い仕事
+  [['会社員','💼'],['公務員','🏛'],['営業','🤝'],['技術者','🔧'],['銀行員','🏦'],['人事の仕事','👥'],['広告の仕事','📣'],['システムエンジニア','🖥'],['不動産の仕事','🏢'],['ITサポート','🛠'],['編集者','📚'],['研究所の職員','🔬']],
+];
+
+// inh：前の世代から受け継ぐもの（null なら第1世代）
+function newLife(name,inh=null){
+  const c=inh?inh.c:weightedPick(COUNTRIES,x=>settings.mode==='births'?x.births:x.pop);
+  const sex=inh?inh.sex:(chance(.512)?'male':'female'),wealthP=inh?inh.wealthP:Math.random();
+  P={name,c,origin:c,sex,wealthP,wealth0:wealthP,age:0,birthYear:inh?inh.year:new Date().getFullYear(),
+    gen:inh?inh.gen:1,lineage:inh?inh.lineage:[],eduBonus:inh?inh.eduBonus:0,legacy:inh?inh.legacy:0,parentDeathAge:inh?inh.parentDeathAge:null,parentName:inh?inh.parentName:null,
+    kids:[],helpedCount:inh?inh.helpedCount:0,helpedYears:inh?inh.helpedYears:0,helpedNow:0,
+    health:clamp(62+(wealthP-.5)*12+rnd(-8,8)),happy:65,know:3+(inh?inh.eduBonus*20:0),bond:clamp((inh?inh.bond:55)+rnd(-12,12)),
+    savings:0,debt:0,income:0,incomePct:0,job:null,jobIcon:'',eduLevel:0,school:null,inSchool:false,field:null,
+    married:false,partner:null,partnerInc:0,widowed:false,children:0,parents:2,workYears:0,retired:false,pension:0,retireAge:65,
+    unemployed:0,focus:'play',spend:'normal',house:null,insLife:false,insHome:false,units:0,biz:false,moved:false,migrated:false,
+    donated:0,actUsed:false,checkup:false,illness:null,
+    log:[],years:[],choices:[],fates:[],alive:true,qx:buildQx(c,sex),flags:{workStreak:0},peakAssets:0,cause:null};
+  G.market=1;
+  others=Array.from({length:4},makeOther);
+}
+
+/* ============================================================
+   同じ瞬間に生まれた4人（それぞれの人生の物語を持つ）
+   ============================================================ */
+function expLeft(o,from){let S=1,e=0;for(let x=from;x<110;x++){const d=S*Math.min(1,o.q[x]*o.qmult);e+=S-d*.5;S-=d;}return e;} // 平均余命
+function sampleDeath(o,from){let d=from;while(d<110&&!chance(o.q[d]*o.qmult))d++;return d;}
+function makeOther(){
+  const c=weightedPick(COUNTRIES,x=>settings.mode==='births'?x.births:x.pop),sex=chance(.512)?'male':'female';
+  const o={c,sex,name:pickName(c,sex),wealthP:Math.random(),q:buildQx(c,sex),qmult:1,helped:0,story:[],met:false,school:false};
+  o.death=sampleDeath(o,0);
+  writeStory(o,0);
+  return o;
+}
+// 年齢 from 以降の人生の物語を（統計にもとづいて）書く
+function writeStory(o,from){
+  o.story=o.story.filter(s=>s.age<from);
+  const c=o.c,add=(age,text)=>{if(age>=from)o.story.push({age,text});};
+  if(from<=6){ o.school=chance(clamp(c.edu*1.05+(o.wealthP-.5)*.3,.05,.99)); add(6,o.school?'小学校に入学しました':'学校に通えず、家の仕事を手伝っています'); }
+  const hs=o.school&&chance(clamp(Math.pow(c.edu,1.5)+(o.wealthP-.5)*.5,.02,.99));
+  const uni=hs&&chance(clamp(Math.pow(c.edu,1.6)*(.45+o.wealthP*.8),.02,.97));
+  const t=uni?3:hs?2:o.school?1:0;
+  if(!o.school)add(10,`${pick(JOBS[0])[0]}をして家計を支えています`);
+  add(uni?22:hs?18:15,`${pick(JOBS[t])[0]}として働き始めました`);
+  if(uni)add(18,'大学に進学しました');
+  const tfr=(c.births/c.pop*1000)/6.5;
+  if(chance(.8)){const ma=Math.round(rnd(18,34)+(c.gdp>30?5:0));add(ma,'結婚しました');
+    const k=Math.max(0,Math.round(tfr+rnd(-1,1)));for(let i=0;i<Math.min(k,6);i++)add(ma+1+i*2+Math.floor(rnd(0,2)),i===0?'はじめての子どもが生まれました':`${i+1}人目の子どもが生まれました`);}
+  if(c.disaster>.4&&chance(.5))add(Math.round(rnd(15,60)),`${pick(DISASTER[c.id]||['洪水','嵐'])}で暮らしに被害が出ました`);
+  if(c.conflict>.3&&chance(.6))add(Math.round(rnd(10,50)),'紛争から逃れるため、住む場所を移りました');
+  if(chance(.5))add(Math.round(rnd(25,55)),pick(['小さなお店を開きました','地域のまとめ役になりました','遠くの町へ出稼ぎに行きました','家族のために家を建てました']));
+  if(c.gdp>=20)add(65,'仕事を引退しました');
+  o.story=o.story.filter(s=>s.age<=o.death).sort((a,b)=>a.age-b.age);
+}
+const otherAge=o=>Math.min(P.age,o.death);
+const otherNews=o=>{const s=o.story.filter(s=>s.age<=P.age);return s.length?s[s.length-1]:null;};
+function othersTick(){
+  const alive=others.filter(o=>o.death>=P.age);
+  for(const o of others){ // この1年に亡くなった人
+    if(o.death===P.age-1&&!o.mourned){o.mourned=true;log(`同じ瞬間に生まれた${o.name}さん（${o.c.name}）が${o.death}歳で亡くなったと知りました`,o.helped?'big':'info','🕊',!!o.helped);}
+  }
+  if(!alive.length)return;
+  const o=pick(alive);
+  // 同じ国にいれば出会うことも
+  if(!o.met&&o.c===P.c&&P.age>=10&&chance(.15)){o.met=true;P.bond+=5;P.happy+=3;log(`同じ瞬間に生まれた${o.name}さんと出会い、友だちになりました`,'good','🤝',true);return;}
+  // 便り
+  if(P.age>=8&&chance(o.met?.18:.08)){const n=otherNews(o);if(n)log(`📮 ${o.name}さん（${o.c.name}・${o.death>=P.age?P.age:o.death}歳）の便り：「${n.text}」`,'info');}
+  // 恩返し
+  const helper=alive.filter(x=>x.helped>0&&x.c.gdp>=P.c.gdp*.5);
+  if(helper.length&&P.age>=18&&(P.savings<M(P.c)*.1||P.happy<40)&&chance(.3)){
+    const h=pick(helper),g=M(P.c)*.3;P.savings+=g;P.happy+=6;P.bond+=4;h.helped=0;
+    log(`以前あなたが支えた${h.name}さんが、今度はあなたを助けてくれました（+${yen(g)}）`,'good','💌',true,'f');
+  }
+}
+function helpOther(i){
+  const o=others[i];if(!o||o.death<P.age||P.actUsed||modalOpen||!P.alive||P.age<15)return;
+  const cost=M(P.c)*.15, ratio=Math.min(1.5,(cost/100)/meanInc(o.c));
+  ask(`🤲 ${o.name}さんを支える`,`${o.c.name}に暮らす${o.name}さん（${P.age}歳）に、${yen(cost)}の支援を送りますか？
+    <div class="q">${o.c.name}の物価では、これは平均的な年収の約${Math.round(ratio*100)}%にあたります。<br>
+    ${ratio>.5?'暮らしを大きく変えられるかもしれません。':ratio>.15?'暮らしの助けになりそうです。':'気持ちは届きますが、暮らしを変えるほどではないかもしれません。'}</div>`,[
+    {label:'支援を送る',fn:()=>{
+      P.actUsed=true;P.savings-=cost;if(P.savings<0){P.debt-=P.savings;P.savings=0;}
+      P.happy+=3;P.donated+=cost;o.helped++;
+      const before=o.death,e0=expLeft(o,P.age);o.qmult=Math.max(.5,o.qmult*Math.max(.45,1-.35*Math.min(1,ratio))); // 何度支えても死亡リスクは半分までしか下がらないo.wealthP=Math.min(.99,o.wealthP+.15*Math.min(1,ratio));
+      const gain=Math.max(0,expLeft(o,P.age)-e0);
+      let what='生活の助けになりました';
+      if(P.age<16&&!o.school&&ratio>.25){o.school=true;what='学校に通えるようになりました';}
+      else if(ratio>.3)what=pick(['病院で治療を受けられました','家族に十分な食べ物を用意できました','井戸を掘るお金にあてられました','子どもを学校に通わせられるようになりました']);
+      o.death=Math.min(109,before+Math.round(gain*rnd(.5,1.5)));
+      writeStory(o,P.age+1);o.story.push({age:P.age,text:`遠くの${P.name}さんの支援で、${what}`});o.story.sort((a,b)=>a.age-b.age);
+      const gained=Math.round(gain*10)/10;P.helpedYears=Math.round((P.helpedYears+gained)*10)/10;P.helpedNow=Math.round((P.helpedNow+gained)*10)/10;if(o.helped===1){P.helpedCount++;}
+      log(`${o.name}さんに支援を送りました。${what}`,'good','🤲',true,'c');
+    }},{label:'やめておく'}]);
+  openNextModal();
+}
+const G={market:1};
+const familyIncome=()=>incomeAt(P.c,P.wealthP);
+function livingIncome(){
+  const m=meanInc(P.c);
+  if(P.retired&&!P.pension)return (P.savings>0||P.children>0)?m*.3:m*.12;
+  if(!P.job||P.age<18)return Math.max(familyIncome(),P.income);
+  let v=P.income+P.partnerInc*.5;
+  if(P.age<55)v*=1-Math.min(P.children,4)*.06;
+  return v;
+}
+const assets=()=>P.savings+(P.house?P.house.value:0)+P.units*G.market-P.debt;
+const sexWord=(sex,age)=>sex==='male'?(age<18?'男の子':'男性'):(age<18?'女の子':'女性');
+const isAuto=()=>$('#auto').checked;
+
+/* ============================================================
+   記録・モーダル
+   ============================================================ */
+// kind: 'c'=自分で選んだこと / 'f'=生まれや運で決まったこと
+function log(text,type='info',icon=null,star=false,kind=null){
+  const e={age:P.age,text,type,icon,star};
+  P.log.push(e);
+  if(kind==='c')P.choices.push(`${P.age}歳：${text}`);
+  if(kind==='f')P.fates.push(`${P.age}歳：${text}`);
+  if(icon&&(!P.yearIcon||star))P.yearIcon=icon;
+  const li=document.createElement('li');li.className=type;
+  li.innerHTML=`<span class="a">${P.age}歳</span>${kind?`<span class="k ${kind}">${kind==='c'?'選択':'運命'}</span>`:''}<span>${icon?icon+' ':''}${text}</span>`;
+  $('#log').prepend(li);
+}
+// choices: [{label, desc, auto, fn}]  cards:true でカード表示
+function ask(title,html,choices,opts={}){modalQueue.push({title,html,choices,opts});}
+function openNextModal(){
+  if(modalOpen||!modalQueue.length)return;
+  const m=modalQueue.shift();modalOpen=true;skipping=false;
+  const box=$('#modal-box');
+  box.innerHTML=`<h2>${m.title}</h2><div>${m.html}</div><div class="${m.opts.cards?'cards':'choices'}"></div>`;
+  const wrap=box.querySelector(m.opts.cards?'.cards':'.choices');let done=false;
+  const choose=ch=>{if(done)return;done=true;$('#modal').hidden=true;modalOpen=false;ch.fn&&ch.fn();clampAll();render();openNextModal();};
+  m.choices.forEach(ch=>{const b=document.createElement('button');b.innerHTML=ch.html||`<b>${ch.label}</b>${ch.desc?`<small>${ch.desc}</small>`:''}`;b.onclick=()=>choose(ch);wrap.appendChild(b);});
+  $('#modal').hidden=false;
+  if(isAuto()&&P&&P.alive)setTimeout(()=>choose(weightedPick(m.choices,c=>c.auto??1)),m.choices.length>1?1800:2600);
+}
+
+/* ============================================================
+   1年の進行
+   ============================================================ */
+function deathProb(){
+  let mult=clamp(Math.exp((healthNorm(P.age)-P.health)/18),.35,4);
+  if(P.age===0)mult=Math.exp((.5-P.wealthP)*.8);
+  if(P.illness)mult*=1.8;
+  return Math.min(.97,P.qx[P.age]*mult);
+}
+function yearStep(){
+  if(!P.alive||modalOpen)return;
+  if(chance(deathProb())){die();return;}
+  P.age++;P.yearIcon=null;P.actUsed=false;
+  if(P.illness&&chance(.35)){log(`${P.illness}の症状が落ち着きました`,'good','🌿');P.illness=null;}
+  G.market*=chance(.08)?rnd(.65,.8):chance(.08)?rnd(1.25,1.4):rnd(.93,1.12);
+  if(P.parentDeathAge!==null&&P.age===P.parentDeathAge){
+    P.parents=Math.max(0,P.parents-1);P.happy-=10;
+    if(P.legacy>0)P.savings+=P.legacy;
+    log(`親の${P.parentName}さん（前の世代のあなた）が亡くなりました${P.legacy>0?`。${yen(P.legacy)}を受け継ぎました`:''}`,'big','🕊',true,'f');
+    P.parentDeathAge=null;
+  }
+  applyFocus();stageEvents();if(chance(.55))randomEvent();{const n=P.log.length;othersTick();if(P.log.length>n&&$('#panes').dataset.tab!=='world')$('#world-dot').hidden=false;}economy();updateHappy();clampAll();
+  P.peakAssets=Math.max(P.peakAssets,assets());
+  P.years.push({age:P.age,happy:P.happy,icon:P.yearIcon});
+  render();
+  if(MILESTONES[P.age])milestone();
+  openNextModal();
+}
+function clampAll(){for(const k of['health','happy','know','bond'])P[k]=clamp(P[k]);P.wealthP=clamp(P.wealthP,.01,.99);P.debt=Math.max(0,P.debt);}
+function applyFocus(){
+  const f=P.focus,c=P.c;
+  if(P.age<6){P.bond+=1;P.know+=1.5*(.6+c.edu*.4);}
+  else{
+    if(P.inSchool)P.know+=(P.school==='night'?2:3.2)*(.4+c.edu*.6);else if(P.age<25)P.know+=.5;
+    switch(f){
+      case'study':P.know+=P.inSchool?3:2;P.happy-=1;break;
+      case'play':P.bond+=3;P.happy+=2;break;
+      case'help':P.wealthP+=.006;P.bond+=1;P.know-=.5;break;
+      case'health':P.health+=2.5;break;
+      case'work':P.health-=1;P.bond-=1;break;
+      case'people':P.bond+=3;P.happy+=2;break;
+      case'rest':P.happy+=3;P.health+=.5;break;
+    }
+  }
+  if(P.age>=15){ if(P.spend==='save')P.happy-=2; if(P.spend==='rich'){P.happy+=2.5;P.health+=.8;} }
+  P.flags.workStreak=f==='work'?P.flags.workStreak+1:0;
+  P.health+=(healthNorm(P.age)-P.health)*.08;
+  if(livingIncome()<1500)P.health-=1.5;
+  if(P.age>65)P.know-=.3;
+  P.bond+=(55-P.bond)*.03+(P.married?1:0)+(P.children?.5:0)-(P.age>75?.6:0);
+}
+
+/* ---------- 人生の大きな分岐 ---------- */
+function stageEvents(){
+  const c=P.c,a=P.age,m=M(c);
+  // 6歳：入学（運命）＋通えない場合の選択
+  if(a===6){
+    const p=clamp(c.edu*1.05+(P.wealthP-.5)*.3+P.eduBonus,.05,.99);
+    if(chance(p)){P.inSchool=true;P.school='primary';P.focus='study';log('小学校に入学しました','good','🎒',true,'f');}
+    else{
+      log('通える学校が近くにありません','bad','🧺',true,'f');
+      ask('🎒 学校に行けない','近くに通える学校がありません。どうしますか？',[
+        {label:'遠くの学校に通わせてほしいと頼む',desc:'家計に負担がかかる。うまくいくとは限らない',auto:2,fn:()=>{
+          if(chance(.25+P.wealthP*.5)){P.inSchool=true;P.school='primary';P.wealthP-=.08;P.focus='study';log('家族が無理をして、遠くの学校に通わせてくれました','good','🎒',true,'c');}
+          else{P.focus='help';log('頼んでみましたが、家の事情で学校には通えませんでした','bad','🧺',false,'c');}}},
+        {label:'家の手伝いをして家族を支える',desc:'絆が深まる。知識は伸びにくい',auto:1,fn:()=>{P.focus='help';P.bond+=5;log('家の手伝いをして家族を支えることにしました','info','🧺',false,'c');}}]);
+    }
+  }
+  if(a===10&&!P.inSchool&&!P.job)startWork(true);
+  // 12歳：中学進学
+  if(a===12&&P.school==='primary'){
+    P.eduLevel=1;
+    const p=clamp(Math.pow(c.edu,1.3)+(P.wealthP-.5)*.4+(P.know-40)/200+P.eduBonus,.03,.99);
+    if(chance(p)){P.school='middle';log('小学校を卒業し、中学校に進みました','good','🏫',false,'f');}
+    else{
+      const sch=clamp((P.know-25)/60,.05,.8);
+      ask('🏫 中学校へ進む余裕がない',`家計が苦しく、中学校に進むのは難しそうです。<div class="q">奨学金がもらえる見込み：およそ${Math.round(sch*100)}%（知識が高いほど有利）</div>`,[
+        {label:'奨学金の試験に挑戦する',auto:2,fn:()=>{if(chance(sch)){P.school='middle';log('奨学金を勝ち取り、中学校に進みました！','good','🏅',true,'c');}else{leaveSchool();log('奨学金には届かず、働き始めました','bad','🍂',true,'c');startWork(true);}}},
+        {label:'働いて家計を助ける',auto:1,fn:()=>{leaveSchool();log('学校を離れ、働いて家計を助けることにしました','info','🎓',true,'c');startWork(true);}}]);
+    }
+  }
+  // 15歳：高校
+  if(a===15&&P.school==='middle'){
+    P.eduLevel=2;
+    const p=clamp(Math.pow(c.edu,1.5)+(P.wealthP-.5)*.5+(P.know-45)/150+P.eduBonus,.02,.99);
+    if(chance(p))ask('🎓 進路を決める','中学校を卒業します。どうしますか？',[
+      {label:'高校へ進む',desc:'知識が伸びる。まだ収入はない',auto:3,fn:()=>{P.school='high';log('高校に進学しました','good','🏫',false,'c');}},
+      {label:'働きながら夜間学校に通う',desc:'収入を得ながら少しずつ学ぶ。疲れやすい',auto:1,fn:()=>{P.school='night';P.inSchool=true;startWork();log('働きながら夜間学校に通うことにしました','info','🌙',true,'c');}},
+      {label:'働き始める',desc:'早く家計を助けられる',auto:1,fn:()=>{leaveSchool();log('中学校を卒業し、働く道を選びました','info','🎓',true,'c');startWork();}}]);
+    else ask('🎓 進路を決める','中学校を卒業しました。高校へ進む余裕は家にありません。',[
+      {label:'働きながら夜間学校に通う',desc:'収入を得ながら学ぶ',auto:1,fn:()=>{P.school='night';P.inSchool=true;startWork();log('働きながら夜間学校に通うことにしました','info','🌙',true,'c');}},
+      {label:'働くことに専念する',auto:1,fn:()=>{leaveSchool();log('働くことに専念しました','info','🎓',false,'c');startWork();}}]);
+  }
+  // 18歳：大学
+  if(a===18&&(P.school==='high'||P.school==='night')){
+    const wasNight=P.school==='night';P.eduLevel=3;
+    if(wasNight){P.school=null;P.inSchool=false;log('夜間学校を卒業しました','good','🎓',true);}
+    const access=clamp(Math.pow(c.edu,1.6)*(.45+P.wealthP*.8)*(wasNight?.6:1)+P.eduBonus,.02,.97);
+    if(!wasNight&&chance(access)){
+      const pass=clamp((P.know-30)/55+c.edu*.15,.05,.95);
+      ask('🌸 大学受験',`高校を卒業します。大学で何を学びますか？<div class="q">合格の見込み：およそ${Math.round(pass*100)}%${P.wealthP<.6?'<br>学費は奨学金（借金）になります':''}</div>`,[
+        ...Object.entries(FIELDS).map(([k,f])=>({html:`<span class="ji">${f.icon}</span><b>${f.label}</b><small>${f.jobs.slice(0,3).map(j=>j[0]).join('・')}など</small>`,auto:k==='art'?.5:1,fn:()=>{
+          if(chance(pass))enterUni(k,a);
+          else examFail(k);}})),
+        {html:'<span class="ji">🃏</span><b>大学には行かず就職する</b>',auto:.8,fn:()=>{leaveSchool();log('高校を卒業して就職する道を選びました','info','🎓',false,'c');jobOffer('🃏 就職','高校を卒業し、働き始めます。');}}],{cards:true});
+    }else if(!wasNight){leaveSchool();log('大学へ進む道は遠く、働き始めます','info','🎓',false,'f');jobOffer('🃏 就職','高校を卒業し、働き始めます。');}
+    else if(P.childWorker){P.childWorker=false;recalcIncome();}
+  }
+  if(a===18&&P.childWorker){P.childWorker=false;recalcIncome();}
+  // 浪人：1年後に再受験
+  if(P.school==='ronin'&&a===P.flags.roninAge+1){
+    const pass=clamp((P.know-30)/55+c.edu*.15+.15,.05,.97);
+    if(chance(pass)){log(`浪人の末、大学に合格しました！（合格の見込み${Math.round(pass*100)}%）`,'good','🌸',true,'f');enterUni(P.field,a);}
+    else{leaveSchool();log('再受験でも届きませんでした。働き始めます','bad','🍂',true,'f');jobOffer('🃏 就職','働き口を探します。');}
+  }
+  // 留学（高校）
+  if(a===16&&P.school==='high'&&!P.abroad&&chance(clamp(P.wealthP*.6+c.edu*.25-.15+(P.know-50)/200,.05,.6)))
+    ask('✈️ 留学のチャンス',`高校で1年間、海外に留学できる制度があります。<div class="q">費用：${yen(m*1.5)}（足りない分は借金）<br>知識が大きく伸び、将来海外で働いたり暮らしたりするきっかけになります。</div>`,[
+      {label:'留学する',desc:'家族や友だちとは1年間離れる',auto:1.5,fn:()=>studyAbroad(m*1.5,'高校で')},
+      {label:'国内で学び続ける',auto:1,fn:()=>log('留学はせず、国内で学び続けることにしました','info',null,false,'c')}]);
+  // 留学（大学の交換留学）
+  if(P.school==='uni'&&a===P.uniEnd-2&&!P.abroad&&chance(.5))
+    ask('✈️ 交換留学','大学の交換留学に応募できます。',[
+      {label:'交換留学する',desc:`費用 ${yen(m*1)}。知識↑ 海外で働く道が開ける`,auto:1.5,fn:()=>studyAbroad(m*1,'大学の交換留学で')},
+      {label:'国内で学ぶ',auto:1,fn:()=>log('交換留学はせず、国内で学ぶことにしました','info',null,false,'c')}]);
+  // 大学卒業 → 就職か大学院か
+  if(P.school==='uni'&&a===P.uniEnd){
+    P.eduLevel=4;leaveSchool();log('大学を卒業しました','good','🎓',true);
+    ask('🎓 大学卒業','大学を卒業します。このあとどうしますか？',[
+      {label:'就職する',auto:2,fn:()=>jobOffer('🎓 卒業・就職','大学を卒業しました。')},
+      {label:'大学院へ進む',desc:`2年間。学費 ${yen(m*1)}。研究を深め、より良い仕事に就きやすくなる`,auto:P.know>60?1.2:.4,fn:()=>{P.school='grad';P.inSchool=true;P.gradEnd=a+2;P.debt+=m*(P.wealthP<.6?1:0);if(P.wealthP>=.6)P.savings-=m;P.focus='study';log('大学院に進みました','good','🔬',true,'c');}}]);
+  }
+  if(P.school==='grad'&&a===P.gradEnd){P.eduLevel=5;leaveSchool();P.know+=5;log('大学院を修了しました','good','🎓',true);jobOffer('🎓 修了・就職','大学院を修了しました。');}
+  // 結婚：2人の候補から選ぶ
+  if(!P.married&&a>=20&&a<=55&&(P.flags.marryCool||0)<=a){
+    const p=.1*(.5+P.bond/100)*(c.gdp<10?1.4:1)*(a<38?1:.4)*(P.widowed?.4:1);
+    if(chance(p)){
+      P.flags.marryCool=a+3;
+      const os=P.sex==='male'?'female':'male',n1=pickName(c,os);let n2=pickName(c,os);if(n2===n1)n2=pickName(c,os);
+      const i1=incomeAt(c,clamp(P.incomePct+.25,.1,.99)),i2=incomeAt(c,clamp(P.incomePct-.1,.02,.9));
+      const cards=[
+        {html:`<span class="ji">💼</span><b>${n1}さん</b><small>安定した仕事をしている<br>世帯の収入が増える</small>`,auto:1.5,fn:()=>marry(n1,i1,4)},
+        {html:`<span class="ji">😊</span><b>${n2}さん</b><small>一緒にいると自然に笑顔になれる<br>幸福と絆が大きく増える</small>`,auto:2,fn:()=>marry(n2,i2,12)}];
+      // 留学先で知り合った人
+      if(P.abroad&&P.abroad!==c&&chance(.6)){const d=P.abroad,n3=pickName(d,os),i3=incomeAt(d,Math.random());
+        cards.push({html:`<span class="ji">🌐</span><b>${n3}さん</b><small>留学先の${d.name}で出会った人<br>結婚すると${d.name}で暮らす<br>子どもは${d.name}で生まれる</small>`,auto:1,fn:()=>{marry(n3,i3,9);moveTo(d,`${n3}さんと暮らすため、`);if(P.job&&!P.retired){P.incomePct=clamp(P.incomePct*.7,.03,.8);recalcIncome();}}});}
+      cards.push({html:`<span class="ji">🚶</span><b>今はまだ結婚しない</b><small>自分の道を進む</small>`,auto:.7,fn:()=>log('今は結婚しないことにしました','info',null,false,'c')});
+      ask('💞 出会い',`${cards.length>3?'3人':'ふたり'}の人と親しくなりました。人生をともにしたいのは？`,cards,{cards:true});
+    }
+  }
+  // 子ども
+  if(P.married&&a>=22&&a<=42&&(P.flags.kidCool||0)<=a&&P.children<6){
+    const tfr=(c.births/c.pop*1000)/6.5;
+    if(chance(clamp(tfr/9,.12,.45))){
+      P.flags.kidCool=a+2;
+      ask('🍼 家族を増やす？',`${P.partner}さんと、子どもを迎えることについて話しています。<div class="q">いまの子ども：${P.children}人<br>子どもがいると幸福と絆が増えますが、暮らしのお金もかかります</div>`,[
+        {label:'子どもを迎えたい',auto:P.children<tfr?3:.7,fn:()=>{if(chance(.75)){P.children++;P.happy+=7;P.bond+=5;P.savings-=m*.1;{const ks=chance(.512)?'male':'female';let kn=pickName(P.c,ks);for(let t=0;t<6&&(kn===P.name||kn===P.parentName||P.kids.some(k=>k.name===kn));t++)kn=pickName(P.c,ks);P.kids.push({name:kn,sex:ks,bornAt:P.age,c:P.c,incPct:P.incomePct});}log(P.children===1?'はじめての子どもが生まれました':`${P.children}人目の子どもが生まれました`,'good','👶',P.children===1,'c');}else log('子どもを望みましたが、今年は授かりませんでした','info','🍼',false,'f');}},
+        {label:'今はまだ',auto:1,fn:()=>log('今は子どもを迎えないことにしました','info',null,false,'c')}]);
+    }
+  }
+  // 40歳：人生の後半
+  if(a===40&&P.job&&!P.retired)ask('🧭 人生の後半をどう過ごす？','40歳になりました。これからの20年、何を大切にしますか？',[
+    {label:'仕事でさらに上を目指す',desc:'収入↑ 健康・絆↓',auto:1,fn:()=>{P.income*=1.15;P.health-=4;P.bond-=4;log('仕事でさらに上を目指すことにしました','info','📈',true,'c');}},
+    {label:'学び直す',desc:`費用 ${yen(m*.5)}。知識↑ 転職に有利`,auto:1,fn:()=>{P.savings-=m*.5;P.know+=12;P.incomePct=Math.min(.99,P.incomePct+.05);recalcIncome();log('学び直しを始めました','good','📚',true,'c');}},
+    {label:'家族や友人との時間を増やす',desc:'絆・幸福↑ 収入↓',auto:1.5,fn:()=>{P.income*=.9;P.bond+=10;P.happy+=6;log('大切な人との時間を増やすことにしました','good','🤝',true,'c');}}]);
+  // 親の介護
+  if(a>=45&&a<=62&&P.parents>0&&!P.flags.care&&chance(.08)){
+    P.flags.care=true;
+    ask('🧓 親の介護','親が年をとり、ひとりで暮らすのが難しくなってきました。',[
+      {label:'自分で介護する',desc:'絆↑ 収入と健康↓',auto:2,fn:()=>{P.bond+=10;P.income*=.85;P.health-=4;log('親を自分で介護することにしました','info','🧓',true,'c');}},
+      {label:`施設やヘルパーに頼む（毎年 ${yen(m*.3)}）`,desc:'お金はかかるが、仕事は続けられる',auto:1,fn:()=>{P.flags.careCost=m*.3;log('介護を施設やヘルパーに頼むことにしました','info','🏥',true,'c');}},
+      {label:'きょうだいや親せきと分担する',desc:'負担は軽いが、うまくいくかは運しだい',auto:1,fn:()=>{if(chance(.6)){P.bond+=3;log('家族みんなで介護を分担できました','good','👪',false,'c');}else{P.bond-=6;P.happy-=5;log('分担がうまくいかず、家族の間がぎくしゃくしました','bad','👪',false,'c');}}}]);
+  }
+  // 子どもの教育方針（最初の子が6歳になったとき）
+  if(P.kids.length&&!P.eduPolicy&&a===P.kids[0].bornAt+6){
+    P.eduPolicy='pending';
+    ask('🎒 子どもの教育方針',`${P.kids[0].name}さんが6歳になりました。子どもたちをどう育てますか？<div class="q">この選択は、次の世代（子どもとして続けるとき）の「生まれ」に反映されます。</div>`,
+      Object.entries(EDU_POLICY).map(([k,v])=>({label:`${v.icon} ${v.label}`,desc:v.desc,auto:v.auto,fn:()=>{P.eduPolicy=k;P.bond+=v.myBond;log(`子どもの教育方針：${v.label}`,'info',v.icon,true,'c');}})));
+  }
+  // 子どもの進学を支えるか（各子どもが18歳のとき）
+  for(const k of P.kids){
+    if(a===k.bornAt+18&&!k.asked){
+      k.asked=true;
+      const cost=M(P.c)*1;
+      ask('🎓 子どもの進学',`${k.name}さんが18歳になり、進学を考えています。学費を出しますか？`,[
+        {label:`学費を出す（${yen(cost)}）`,desc:'子どもが学びやすくなる（次の世代に反映）',auto:P.savings>cost?3:1,fn:()=>{P.savings-=cost;if(P.savings<0){P.debt-=P.savings;P.savings=0;}k.support=true;P.bond+=4;log(`${k.name}さんの学費を出しました`,'good','🎓',true,'c');}},
+        {label:'本人に任せる',auto:1,fn:()=>log(`${k.name}さんの進学は本人に任せることにしました`,'info',null,false,'c')}]);
+    }
+  }
+  // 定年後の過ごし方（引退の翌年）
+  if(P.retired&&!P.flags.afterRetire&&a<85){
+    P.flags.afterRetire=true;
+    ask('🌅 引退後の暮らし','仕事を離れて1年が経ちました。これからをどう過ごしますか？',[
+      {label:'短時間の仕事に就く（再就職）',desc:'収入と生きがいが増える。体には少し負担',auto:1,fn:()=>{P.rehired=pick(['地域の見守りの仕事','お店の手伝い','子どもに教える仕事','畑の仕事','施設の受付']);log(`引退後、${P.rehired}に就きました`,'info','🧑‍🔧',true,'c');}},
+      {label:'地域の活動に参加する',desc:'絆・幸福↑',auto:1.5,fn:()=>{P.bond+=8;P.happy+=5;log('地域の活動に参加し始めました','good','🌱',true,'c');}},
+      {label:'ゆっくり過ごす',desc:'健康・幸福が少し回復',auto:1,fn:()=>{P.health+=3;P.happy+=3;log('引退後はゆっくり過ごすことにしました','info','☕',false,'c');}}]);
+  }
+  // 引退
+  if(P.job&&!P.retired){
+    if(c.gdp>=20&&a===60&&!P.flags.askedRetire){
+      P.flags.askedRetire=true;
+      ask('🌅 いつ引退する？','60歳になりました。いつまで働きますか？',[
+        {label:'60歳で引退する',desc:'年金は少なめ（収入の40%）',auto:1,fn:()=>{P.retireAge=60;retire(true,.4);}},
+        {label:'65歳まで働く',desc:'年金は収入の50%',auto:2,fn:()=>{P.retireAge=65;log('65歳まで働くことにしました','info',null,false,'c');}},
+        {label:'70歳まで働く',desc:'年金は収入の60%。体には負担',auto:1,fn:()=>{P.retireAge=70;log('70歳まで働くことにしました','info',null,false,'c');}}]);
+    }
+    if(c.gdp>=20&&a===P.retireAge&&a>60)retire(true,P.retireAge>=70?.6:.5);
+    if(c.gdp<20&&(a===68||(a>=60&&P.health<30))&&!P.flags.askedRetire){
+      P.flags.askedRetire=true;
+      ask('🌅 働き続ける？',`${c.name}では年金を受け取れる人は多くありません。体も衰えてきました。`,[
+        {label:'働けるうちは働く',desc:'収入は減るが続く。健康↓',auto:1,fn:()=>{P.income*=.6;P.health-=3;log('体が動くうちは働き続けることにしました','info','💪',true,'c');}},
+        {label:P.children?'子どもたちに頼って暮らす':'貯えで暮らす',desc:'仕事を離れる',auto:1,fn:()=>retire(false,0)}]);
+    }
+  }
+}
+function enterUni(k,a){
+  const m=M(P.c);P.school='uni';P.inSchool=true;P.field=k;P.uniEnd=a+4;
+  if(P.wealthP<.6)P.debt+=m*1.5;
+  log(`大学に合格し、${FIELDS[k].label}を学び始めました！${P.wealthP<.6?'（学費は奨学金＝借金）':''}`,'good','🌸',true,P.flags.ronin?null:'c');
+}
+function examFail(k){
+  log('大学には届きませんでした','bad','🍂',true,'f');
+  const cost=M(P.c)*.3;
+  ask('🍂 不合格','大学受験に落ちてしまいました。どうしますか？',[
+    {label:'浪人して、もう一度挑戦する',desc:`1年間受験勉強に専念する。予備校代 ${yen(cost)}。合格しやすくなる`,auto:1.2,fn:()=>{
+      P.flags.ronin=true;P.flags.roninAge=P.age;P.school='ronin';P.inSchool=true;P.field=k;P.savings-=cost;P.focus='study';
+      log('浪人して、もう一度挑戦することにしました','info','📖',true,'c');}},
+    {label:'就職する',auto:1,fn:()=>{leaveSchool();log('進学をあきらめ、就職することにしました','info','🎓',false,'c');jobOffer('🃏 就職','働き口を探します。');}}]);
+}
+function studyAbroad(cost,how){
+  const d=weightedPick(COUNTRIES.filter(x=>x.gdp>=40&&x!==P.c),x=>x.pop);
+  P.savings-=cost;if(P.savings<0){P.debt-=P.savings;P.savings=0;}
+  P.abroad=d;P.know+=8;P.happy+=5;P.bond-=3;
+  log(`${how}${d.name}に留学しました`,'good','✈️',true,'c');
+}
+function moveTo(d,why){ // 別の国へ移り住む
+  const old=P.c;P.c=d;P.migrated=true;
+  const nq=buildQx(d,P.sex);P.qx=P.qx.map((v,i)=>i<P.age?v:(v+nq[i])/2);
+  P.bond-=8;log(`${why}${old.name}を離れ、${d.name}で暮らし始めました`,'big','🛬',true,'c');
+}
+function marry(name,inc,joy){
+  P.married=true;P.partner=name;P.partnerInc=inc;P.happy+=6+joy*.5;P.bond+=joy;
+  log(`${name}さんと結婚しました`,'good','💍',true,'c');
+}
+function leaveSchool(){P.inSchool=false;P.school=null;}
+function recalcIncome(){P.income=incomeAt(P.c,P.incomePct)*(.8+.1*P.eduLevel)*(P.jobMult||1)*(P.childWorker?.3:1);}
+function startWork(child=false){ // 選択肢なしの就職（子どもの労働・夜間学校など）
+  const t=child?0:[0,1,1,2,3,3][P.eduLevel];
+  const [n,i]=pick(JOBS[Math.min(t,2)]);
+  P.job=n;P.jobIcon=i;P.jobMult=1;P.childWorker=child;P.workYears=0;
+  P.incomePct=clamp(.3*P.wealthP+.3*(P.know/100)+.1*P.eduLevel/4+.3*Math.random(),.01,.99);recalcIncome();
+  if(!P.inSchool)P.focus='work';
+  log(`${child?'子どもながら、':''}${n}として働き始めました（年収 ${yen(P.income*100)}）`,'info',i,!child,child?'f':null);
+}
+function makeOffer(tierOrField){
+  const pct=clamp(.3*P.wealthP+.3*(P.know/100)+.1*P.eduLevel/4+.3*Math.random(),.01,.99);
+  if(typeof tierOrField==='string'){const [n,i,k]=pick(FIELDS[tierOrField].jobs);return{n,i,pct:clamp(pct*.5+k*.6,.05,.99),mult:1.15};}
+  const t=Math.min(3,Math.max(0,tierOrField));const [n,i]=pick(JOBS[t]);return{n,i,pct,mult:1+t*.05};
+}
+function jobOffer(title,intro,current=false){
+  const t=[0,1,1,2,3,3][P.eduLevel];
+  const offers=P.eduLevel>=4&&P.field?[makeOffer(P.field),makeOffer(P.field),makeOffer(3)]:[makeOffer(t),makeOffer(t),makeOffer(Math.max(0,t-1))];
+  if(P.eduLevel===5)offers.forEach(o=>o.pct=Math.min(.99,o.pct+.1));
+  offers.forEach(o=>o.inc=incomeAt(P.c,o.pct)*(.8+.1*P.eduLevel)*o.mult);
+  const choices=[];
+  // 留学経験があれば、留学先の国で働く道も
+  if(P.abroad&&P.abroad!==P.c&&!P.retired){
+    const d=P.abroad,o=makeOffer(Math.min(3,t));o.pct=clamp(o.pct*.7,.05,.8);const inc=incomeAt(d,o.pct)*(.8+.1*P.eduLevel)*o.mult;
+    choices.push({auto:inc*.8,html:`<span class="ji">🌐</span><b>${d.name}で${o.n}</b><small>留学経験を生かす<br>年収 ${yen(inc*100)}（${d.name}の物価）<br>家族や友人とは離れる</small>`,fn:()=>{
+      moveTo(d,'留学経験を生かして');P.job=o.n;P.jobIcon=o.i;P.incomePct=o.pct;P.jobMult=o.mult;P.childWorker=false;P.workYears=current?P.workYears:0;recalcIncome();P.unemployed=0;P.focus='work';
+      log(`${d.name}で${o.n}として働き始めました（年収 ${yen(P.income*100)}）`,'info',o.i,true,'c');}});
+  }
+  choices.unshift(...offers.map(o=>({auto:o.inc,html:`<span class="ji">${o.i}</span><b>${o.n}</b><small>年収 ${yen(o.inc*100)}</small>`,fn:()=>{
+    P.job=o.n;P.jobIcon=o.i;P.incomePct=o.pct;P.jobMult=o.mult;P.childWorker=false;P.workYears=current?P.workYears:0;recalcIncome();P.unemployed=0;P.focus='work';
+    log(`${o.n}として${current?'新しく':''}働き始めました（年収 ${yen(P.income*100)}）`,'info',o.i,true,'c');}})));
+  if(current)choices.push({auto:P.income*1.05,html:`<span class="ji">${P.jobIcon}</span><b>いまの仕事を続ける</b><small>年収 ${yen(P.income*100)}</small>`,fn:()=>log('いまの仕事を続けることにしました','info',null,false,'c')});
+  ask(title,`${intro}<br>どの仕事を選びますか？`,choices,{cards:true});
+}
+function retire(withPension,rate){
+  P.retired=true;P.pension=withPension?P.income*rate:0;P.focus='people';
+  log(withPension?`仕事を引退し、年金（年 ${yen(P.pension*100)}）で暮らし始めました`:'仕事を離れました。年金はありません','info','🌅',true,'c');
+}
+function economy(){
+  const m=meanInc(P.c);
+  if(P.job&&!P.retired){
+    if(P.unemployed>0){P.income=m*.12;P.unemployed--;if(!P.unemployed)log('新しい仕事が見つかりました','good','🔧');}
+    else{P.workYears++;recalcIncome();P.income*=(1+Math.min(P.workYears,25)*.02)*(P.focus==='work'?1.15:1);}
+  }else if(P.retired)P.income=P.pension;else P.income=0;
+  if(P.job||P.retired){
+    let rate=P.income<m*.4?.03:P.income<m?.08:.15;
+    rate+=P.spend==='save'?.1:P.spend==='rich'?-.1:0;
+    rate-=Math.min(P.children,4)*.02*(P.age<55?1:0);
+    P.savings+=(P.income+P.partnerInc*.5)*100*rate;
+    if(P.flags.careCost&&P.parents>0)P.savings-=P.flags.careCost;
+    if(P.insLife)P.savings-=M(P.c)*.05;
+    if(P.insHome)P.savings-=M(P.c)*.03;
+    if(P.debt>0){const pay=Math.min(P.debt,P.income*100*.1);P.debt-=pay;P.savings-=pay*.3;}
+    if(P.retired&&!P.pension){
+      const need=M(P.c)*.25;
+      if(P.savings>=need)P.savings-=need;
+      else if(P.children>0){P.savings=Math.max(0,P.savings-need*.3);if(chance(.25))log('子どもたちが暮らしを支えてくれています','good','👪');}
+      else{P.savings=0;P.happy-=4;P.health-=2;if(chance(.35))log('暮らしていくお金が足りず、苦しい一年でした','bad','💧');}
+    }
+  }
+  { const mm=M(P.c);
+    // 副業
+    if(P.side&&!P.retired){const g=mm*rnd(.05,.3)*(1+P.know/150);P.savings+=g;P.health-=1.5;P.bond-=1;if(chance(.15))log(`副業（${P.side}）で${yen(g)}の収入がありました`,'good','🌙');}
+    // 定年後の仕事
+    if(P.rehired){const g=mm*.2*clamp(P.health/60,.3,1.3);P.savings+=g;P.happy+=1.5;P.health-=.5;if(P.age>=82||P.health<20){log(`体力の衰えから、${P.rehired}をやめました`,'info','🌅');P.rehired=null;}}
+    // 子どもの教育方針（子どもが18歳未満のあいだ）
+    const young=P.kids.filter(k=>P.age-k.bornAt<18).length;
+    if(P.eduPolicy==='cram'&&young)P.savings-=mm*.12*Math.min(young,3);
+    if(P.eduPolicy==='help'&&P.kids.some(k=>P.age-k.bornAt>=10&&P.age-k.bornAt<18))P.savings+=mm*.04;
+  }
+  if(P.biz&&!P.retired){
+    const r=Math.random(),w=clamp(.35+P.know/250+(P.focus==='work'?.08:0),.3,.7),mm=M(P.c);
+    if(r<w){const g=mm*rnd(.5,2.5);P.savings+=g;log(`商売が好調でした（+${yen(g)}）`,'good','🚀');}
+    else if(r<w+.3){const l=mm*rnd(.3,1.2);P.savings-=l;log(`商売が赤字でした（-${yen(l)}）`,'bad','📉');}
+  }
+  if(P.savings<0){P.debt-=P.savings;P.savings=0;}
+}
+function updateHappy(){
+  const li=livingIncome(),rel=Math.log(Math.max(li,100)/meanInc(P.c));
+  const target=58+7*clamp(rel,-2,1.5)+(P.health-60)*.3+(P.bond-55)*.35+(li<1500?-8:li<3000?-4:0)-(P.debt>M(P.c)?5:P.debt>0?2:0)+(P.house?3:0);
+  P.happy+=(target-P.happy)*.22;
+}
+
+/* ============================================================
+   ランダムな出来事（運命）
+   ============================================================ */
+const EVENTS=[
+  {w:p=>p.age<10?2+p.c.malaria*2:0,fn:p=>{if(p.c.malaria&&chance(.5)){p.health-=7;log('マラリアにかかり、高い熱が続きました','bad','🦟',false,'f');}else{p.health-=3;log('高い熱を出して寝込みました','bad','🤒');}}},
+  {w:p=>p.age>=5&&p.age<=25?2:0,fn:p=>{p.bond+=6;p.happy+=4;log('親友ができました','good','🤝');}},
+  {w:p=>p.inSchool&&p.age<18?(settings.gentle?.5:1.2):0,fn:p=>ask('🌧 学校でのつらいこと',settings.gentle?'学校で人間関係につまずき、つらい思いをしています。':'クラスでいじめにあい、学校へ行くのがつらくなっています。',[
+    {label:'信頼できる大人に相談する',desc:'状況が良くなるかもしれない',auto:2,fn:()=>{if(chance(.65)){p.happy-=2;p.bond+=3;log('大人に相談し、状況が少しずつ良くなりました','good','🌤',false,'c');}else{p.happy-=6;log('相談しましたが、すぐには変わりませんでした','bad','🌧',false,'c');}}},
+    {label:'ひとりで耐える',auto:1,fn:()=>{p.happy-=10;p.bond-=5;log('ひとりで耐える日々が続きました','bad','🌧',false,'c');}},
+    {label:'別の居場所（部活・地域）を探す',auto:1,fn:()=>{p.happy-=3;p.bond+=5;log('学校の外に新しい居場所を見つけました','good','🏀',false,'c');}}])},
+  {w:p=>p.inSchool&&p.know>55?1.5:0,fn:p=>{p.happy+=5;p.know+=2;log(pick(['作文コンクールで賞をもらいました','算数のテストで一番になりました','科学の自由研究が表彰されました']),'good','🏅',true);}},
+  {w:p=>p.age<18?1:0,fn:p=>{p.wealthP-=.1;p.happy-=4;log('家族が仕事を失い、家の暮らしが苦しくなりました','bad','📉',false,'f');}},
+  {w:p=>p.age<18?1:0,fn:p=>{p.wealthP+=.08;p.happy+=3;log('家族の仕事がうまくいき、暮らしにゆとりが出ました','good','📈',false,'f');}},
+  {w:p=>p.c.disaster*1.2,fn:p=>{const d=pick(DISASTER[p.c.id]||['洪水','干ばつ','嵐']),loss=M(p.c)*.4+(p.house?p.house.value*.3:0);p.happy-=5;p.health-=3;
+    if(p.insHome){log(`${d}に見舞われましたが、保険で損害をまかなえました`,'bad','🌪',false,'f');}else{p.savings-=M(p.c)*.4;if(p.house)p.house.value*=.7;log(`${d}に見舞われ、${yen(loss)}の損害が出ました`,'bad','🌪',true,'f');}}},
+  {w:p=>p.c.gdp<6?1.5:0,fn:p=>{p.health-=5;p.happy-=3;log('雨が降らず作物が育たない年で、食べ物が足りませんでした','bad','🌾',false,'f');}},
+  {w:p=>p.age>=15&&p.age<=40&&!p.married?2:0,fn:p=>{p.happy+=6;log('恋をしました','good','💗');}},
+  {w:p=>p.job&&!p.retired&&!p.childWorker&&p.age>=24?1.5:0,fn:p=>{p.incomePct=Math.min(.99,p.incomePct+.07);recalcIncome();p.happy+=5;log('仕事ぶりが認められ、昇進しました','good','📜',true);}},
+  {w:p=>p.job&&!p.retired&&!p.unemployed&&!p.biz?1:0,fn:p=>{p.happy-=8;log('勤め先が傾き、仕事を失いました','bad','📦',true,'f');
+    ask('📦 仕事を失った','次の仕事をどう探しますか？',[
+      {label:'すぐに見つかる仕事に就く',desc:'収入は少し下がるが、空白はない',auto:2,fn:()=>{p.incomePct=Math.max(.02,p.incomePct-.08);recalcIncome();log('すぐに次の仕事に就きました','info','🔧',false,'c');}},
+      {label:'1年かけてじっくり探す',desc:'その間の収入はほぼないが、良い仕事に出会えるかも',auto:1,fn:()=>{p.unemployed=1;if(chance(.5+p.know/250)){p.incomePct=Math.min(.99,p.incomePct+.1);recalcIncome();log('じっくり探し、前より良い仕事が見つかりそうです','good','🔍',false,'c');}else log('じっくり探しましたが、条件は前と同じくらいです','info','🔍',false,'c');}}]);}},
+  {w:()=>.5,fn:p=>{p.savings+=M(p.c)*.2;p.happy+=3;log('くじで少しだけお金が当たりました','good','🍀',false,'f');}},
+  {w:p=>p.age>=20&&p.parents>(p.parentDeathAge!==null?1:0)?(p.age/40)*(70/p.c.le):0,fn:p=>{p.parents--;p.happy-=10;p.bond-=3;const inh=M(p.c)*p.wealthP;p.savings+=inh;log(p.parents?'親のひとりが亡くなりました':'もうひとりの親も亡くなりました','big','🕊',true,'f');}},
+  {w:p=>p.age>=22&&p.savings>M(p.c)?1:0,fn:p=>ask('💹 もうけ話','知り合いから「必ずもうかる」という話を持ちかけられました。',[
+    {label:'話に乗る',desc:'大きく増えるかもしれないし、失うかもしれない',auto:.7,fn:()=>{const amt=p.savings*.5;if(chance(.35)){p.savings+=amt*.8;log('もうけ話がうまくいき、お金が増えました','good','📈',false,'c');}else{p.savings-=amt*.8;p.happy-=6;log('もうけ話は詐欺まがいで、お金を失いました','bad','📉',true,'c');}}},
+    {label:'断る',auto:2,fn:()=>log('うまい話は断りました','info',null,false,'c')}])},
+  {w:()=>1,fn:p=>{p.happy+=5;log(`新しい趣味を見つけました（${pick(['歌','料理','サッカー','絵を描くこと','楽器','読書','裁縫','ダンス','釣り'])}）`,'good','🎨');}},
+  {w:p=>p.age>=35&&!p.illness?p.age/30:0,fn:p=>{
+    const ill=pick(p.age>55?['心臓の病気','がん','脳卒中','糖尿病']:['結核','重い肺炎','がん','肝臓の病気']);
+    const cost=M(p.c)*rnd(.6,2),pc=p.insLife?cost*.2:cost,ok=clamp(.35+(p.c.le-55)/40+p.wealthP*.2+(p.checkup?.15:0),.2,.97);
+    log(`${ill}が見つかりました${p.checkup?'（健康診断で早めに見つかりました）':''}`,'bad','🏥',true,'f');p.checkup=false;
+    ask('🏥 病気が見つかる',`${ill}が見つかりました。<div class="q">治療費：${yen(pc)}${p.insLife?'（保険適用）':''}<br>治療がうまくいく見込み：およそ${Math.round(ok*100)}%</div>`,[
+      {label:'治療を受ける',desc:p.savings<pc?'足りない分は借金になる':'貯金から払う',auto:3,fn:()=>{p.savings-=pc;if(chance(ok)){p.health-=5;log(`${ill}の治療を受け、回復に向かいました`,'good','💊',true,'c');}else{p.health-=15;p.illness=ill;log(`${ill}の治療を受けましたが、思うように良くなりません`,'bad','🏥',true,'c');}}},
+      {label:'治療を受けない',desc:'お金は残るが、体への負担は大きい',auto:1,fn:()=>{p.health-=20;p.illness=ill;log(`${ill}を抱えたまま暮らすことにしました`,'bad','🏥',true,'c');}}]);
+  }},
+  {w:p=>p.c.conflict*2.5,fn:p=>{log(settings.gentle?'住んでいる地域の情勢が不安定になりました':'住んでいる地域で武力衝突が起きました','big','⚠️',true,'f');
+    ask('⚠️ 情勢の悪化',settings.gentle?'住んでいる地域の情勢が不安定になってきました。':'住んでいる地域で武力衝突が起き、危険が迫っています。',[
+    {label:'避難する',desc:'安全は増すが、財産や人とのつながりを失う',auto:2,fn:()=>{p.savings*=.5;if(p.house)p.house.value*=.3;p.bond-=6;p.happy-=6;log('住み慣れた土地を離れ、避難しました','big','🎒',true,'c');}},
+    {label:'留まる',desc:'暮らしは守れるが、危険もある',auto:1,fn:()=>{p.happy-=8;if(chance(.18)){p.health-=15;log(settings.gentle?'混乱の中で体を痛めました':'衝突に巻き込まれ、大けがを負いました','bad','🩹',true,'f');}else log('留まり、不安な日々をなんとか乗り越えました','info','🌷',false,'c');}}]);}},
+  {w:p=>p.age>=18?1:0,fn:p=>{p.bond+=5;p.happy+=3;log(pick(['地域のお祭りの準備を手伝いました','近所の子どもたちに勉強を教えました','困っている人を助ける活動に参加しました']),'good','🌱');}},
+  {w:p=>p.children>0&&p.age>=48?1.5:0,fn:p=>{p.happy+=8;p.bond+=5;log('孫が生まれました','good','🍼',true);}},
+  {w:p=>p.married&&p.age>=60?(p.age-55)/15:0,fn:p=>{p.married=false;p.widowed=true;p.partnerInc=0;p.happy-=15;p.bond-=8;log(`${p.partner}さんが亡くなりました`,'big','🕊',true,'f');}},
+  {w:p=>p.married&&p.age<60?(p.bond<45?1:.25):0,fn:p=>ask('💔 すれ違い',`${p.partner}さんとの間に、すれ違いが増えてきました。`,[
+    {label:'時間をかけて話し合う',desc:'関係を立て直せるかもしれない',auto:2,fn:()=>{if(chance(.6)){p.bond+=6;log(`${p.partner}さんとじっくり話し合い、関係を立て直しました`,'good','💞',false,'c');}else{p.married=false;p.partnerInc=0;p.happy-=10;log(`話し合いましたが、${p.partner}さんと別れることになりました`,'bad','💔',true,'c');}}},
+    {label:'別れる',auto:.5,fn:()=>{p.married=false;p.partnerInc=0;p.happy-=8;log(`${p.partner}さんと別れました`,'bad','💔',true,'c');}}])},
+  {w:p=>p.age>=15&&p.age<=65?.8:0,fn:p=>{p.health-=8;if(!p.insLife)p.savings-=M(p.c)*.15;log(pick(['交通事故にあい、けがをしました','仕事中にけがをしました','転んで骨を折りました'])+(p.insLife?'（保険で治療費をまかなえました）':''),'bad','🩹',false,'f');}},
+  {w:p=>p.age>=40?1:0,fn:p=>{p.bond+=4;p.happy+=4;log('古い友人と久しぶりに再会しました','good','☕');}},
+  {w:()=>.7,fn:p=>{p.happy+=4;log(`${pick(['犬','猫','ヤギ','ニワトリ','小鳥'])}と暮らし始めました`,'good','🐾');}},
+  {w:p=>p.flags.workStreak>=4?2:0,fn:p=>{p.happy-=8;p.health-=4;log('働きすぎて心も体も疲れてしまいました。少し休むことも大切です','bad','🌫');}},
+  {w:p=>p.children>0&&p.age>=45&&p.age<=65?1:0,fn:p=>{p.happy+=3;log('子どもが独り立ちしました','good','🕊');}},
+  {w:p=>p.age>=70?1:0,fn:p=>{p.bond+=3;p.happy+=3;log(pick(['若い人に昔の話を聞かせました','家族みんなで食卓を囲みました','庭の木が大きく育ちました']),'good','🌳');}},
+];
+function randomEvent(){const pool=EVENTS.filter(e=>e.w(P)>0);if(pool.length)weightedPick(pool,e=>e.w(P)).fn(P);}
+
+/* ============================================================
+   今年の行動（1年に1回）
+   ============================================================ */
+function actionList(){
+  const p=P,m=M(p.c),a=p.age,adult=a>=18;
+  return [
+    {id:'check',icon:'🩺',label:'健康診断',cost:m*.06,show:a>=15,hint:'健康↑ 病気を早く見つけやすい'},
+    {id:'lesson',icon:'📖',label:a<18?'習い事':'資格の講座',cost:m*.15,show:a>=8,hint:a<18?'知識↑（家計から）':'知識↑ 収入↑の可能性'},
+    {id:'trip',icon:'✈️',label:'旅行',cost:m*.3,show:adult,hint:'幸福・絆↑'},
+    {id:'family',icon:'💝',label:p.parents>0?'親孝行・仕送り':'家族にごちそう',cost:m*.2,show:adult,hint:'絆↑'},
+    {id:'donate',icon:'🤲',label:'寄付をする',cost:m*.1,show:adult,hint:'幸福↑ 誰かの助けに'},
+    {id:'invest',icon:'📈',label:'投資する',cost:null,show:adult&&p.savings>m*.2,hint:`景気指数 ${G.market.toFixed(2)}`},
+    {id:'sell',icon:'💱',label:'投資を売る',cost:null,show:p.units>0,hint:`価値 ${yen(p.units*G.market)}`},
+    {id:'house',icon:'🏠',label:'家を買う',cost:null,show:a>=22&&!p.house,hint:'幸福↑ 足りない分はローン'},
+    {id:'sellhouse',icon:'🏷',label:'家を売る',cost:null,show:!!p.house,hint:p.house?`価値 ${yen(p.house.value)}`:''},
+    {id:'ins',icon:'🛡',label:'保険を見直す',cost:null,show:adult,hint:`医療${p.insLife?'✓':'—'} 災害${p.insHome?'✓':'—'}`},
+    {id:'jobhunt',icon:'🔍',label:'転職先を探す',cost:null,show:!!p.job&&!p.retired&&!p.biz&&a>=20,hint:'職業カードから選び直す'},
+    {id:'city',icon:'🏙',label:'都会へ引っ越す',cost:m*.4,show:adult&&a<=50&&p.c.gdp<25&&!p.moved,hint:'収入↑ 絆↓'},
+    {id:'migrate',icon:'🌐',label:'海外移住を目指す',cost:m*.8,show:a>=18&&a<=45&&p.c.gdp<25&&!p.migrated,hint:'成功すれば暮らしが一変'},
+    {id:'biz',icon:'🚀',label:'商売を始める',cost:m*1,show:a>=22&&a<=60&&!p.biz&&!p.retired,hint:'毎年の結果が大きくぶれる'},
+    {id:'bizend',icon:'🛑',label:'商売をたたむ',cost:null,show:p.biz,hint:'安定した暮らしに戻る'},
+    {id:'side',icon:'🌙',label:'副業を始める',cost:null,show:!!p.job&&!p.retired&&!p.biz&&!p.side&&a>=20&&!p.inSchool,hint:'毎年の収入↑ 健康・絆↓'},
+    {id:'sideend',icon:'🛌',label:'副業をやめる',cost:null,show:p.side,hint:'体を休める'},
+    {id:'rehire',icon:'🧑‍🔧',label:'短時間の仕事に就く',cost:null,show:p.retired&&!p.rehired&&a<80,hint:'収入・生きがい↑ 健康少し↓'},
+    {id:'rehireend',icon:'🌅',label:'短時間の仕事をやめる',cost:null,show:p.rehired,hint:'ゆっくり過ごす'},
+  ].filter(x=>x.show);
+}
+function doAction(id){
+  if(P.actUsed||modalOpen||!P.alive)return;
+  const p=P,m=M(p.c),a=actionList().find(x=>x.id===id);if(!a)return;
+  const use=()=>{p.actUsed=true;};
+  const payCost=c=>{p.savings-=c;if(p.savings<0){p.debt-=p.savings;p.savings=0;}};
+  const simple={
+    check:()=>{payCost(a.cost);p.health+=3;p.checkup=true;log('健康診断を受けました','good','🩺',false,'c');},
+    lesson:()=>{payCost(a.cost);p.know+=5;if(p.job&&chance(.3)){p.incomePct=Math.min(.99,p.incomePct+.04);recalcIncome();}log(a.label+'に通いました','good','📖',false,'c');},
+    trip:()=>{payCost(a.cost);p.happy+=8;p.bond+=2;p.know+=1;log(`${pick(['海の見える町','山あいの村','はじめての外国','遠い親せきの家'])}へ旅をしました`,'good','🧳',false,'c');},
+    family:()=>{payCost(a.cost);p.bond+=8;p.happy+=3;log(p.parents>0?'親に仕送りをし、顔を見に帰りました':'家族にごちそうをふるまいました','good','💝',false,'c');},
+    donate:()=>{payCost(a.cost);p.donated+=a.cost;p.happy+=3;log(`${yen(a.cost)}を寄付しました`,'good','🤲',false,'c');},
+    city:()=>{payCost(a.cost);p.moved=true;p.incomePct=Math.min(.99,p.incomePct+.08);if(p.job)recalcIncome();p.bond-=5;log('都会へ引っ越しました','info','🏙',true,'c');},
+    bizend:()=>{p.biz=false;log('商売をたたみました','info','🛑',true,'c');},
+    side:()=>{p.side=pick(['配達の仕事','オンラインの仕事','手作り品の販売','家庭教師','週末の屋台']);log(`副業で${p.side}を始めました`,'info','🌙',true,'c');},
+    sideend:()=>{log(`副業（${p.side}）をやめました`,'info','🛌',false,'c');p.side=null;},
+    rehire:()=>{p.rehired=pick(['地域の見守りの仕事','お店の手伝い','子どもに教える仕事','畑の仕事','施設の受付']);log(`引退後、${p.rehired}に就きました`,'info','🧑‍🔧',true,'c');},
+    rehireend:()=>{log(`${p.rehired}をやめ、ゆっくり過ごすことにしました`,'info','🌅',false,'c');p.rehired=null;},
+  };
+  if(simple[id]){use();simple[id]();clampAll();render();return;}
+  if(id==='invest'){ask('📈 投資',`世界の景気に合わせて価値が上下します。<div class="q">景気指数：${G.market.toFixed(2)}（1.00が基準）／ 貯金：${yen(p.savings)}</div>`,[
+    {label:`少し（${yen(p.savings*.2)}）`,fn:()=>{use();const v=p.savings*.2;p.savings-=v;p.units+=v/G.market;log(`${yen(v)}を投資しました`,'info','📈',false,'c');}},
+    {label:`半分（${yen(p.savings*.5)}）`,fn:()=>{use();const v=p.savings*.5;p.savings-=v;p.units+=v/G.market;log(`${yen(v)}を投資しました`,'info','📈',false,'c');}},
+    {label:'やめておく'}]);}
+  if(id==='sell'){use();const v=p.units*G.market;p.savings+=v;p.units=0;log(`投資を売って${yen(v)}になりました`,'info','💱',false,'c');}
+  if(id==='house'){const H=[{n:'小さな家',i:'🛖',k:2,h:5},{n:'ふつうの家',i:'🏠',k:5,h:9},{n:'大きな家',i:'🏡',k:11,h:14}];
+    ask('🏠 家を買う',`どの家を買いますか？足りない分はローン（借金）になります。<div class="q">貯金：${yen(p.savings)}</div>`,[
+      ...H.map(h=>({html:`<span class="ji">${h.i}</span><b>${h.n}</b><small>${yen(m*h.k)}<br>幸福+${h.h}</small>`,fn:()=>{use();payCost(m*h.k);p.house={name:h.n,icon:h.i,value:m*h.k};p.happy+=h.h;log(`${h.n}を買いました`,'good',h.i,true,'c');}})),
+      {html:'<span class="ji">🚶</span><b>やめておく</b>'}],{cards:true});}
+  if(id==='sellhouse'){use();p.savings+=p.house.value;log(`${p.house.name}を${yen(p.house.value)}で売りました`,'info','🏷',true,'c');p.house=null;p.happy-=4;}
+  if(id==='ins'){ask('🛡 保険','加入する保険を選んでください（毎年の保険料が貯金から引かれます）。',[
+    {label:`医療保険に${p.insLife?'入ったまま':'入る'}・災害保険に${p.insHome?'入ったまま':'入る'}`,desc:`毎年 ${yen(m*.08)}`,fn:()=>{use();p.insLife=true;p.insHome=true;log('医療保険と災害保険に入りました','info','🛡',false,'c');}},
+    {label:'医療保険だけ',desc:`毎年 ${yen(m*.05)}`,fn:()=>{use();p.insLife=true;p.insHome=false;log('医療保険だけに入りました','info','🛡',false,'c');}},
+    {label:'災害保険だけ',desc:`毎年 ${yen(m*.03)}`,fn:()=>{use();p.insLife=false;p.insHome=true;log('災害保険だけに入りました','info','🛡',false,'c');}},
+    {label:'保険には入らない',fn:()=>{use();p.insLife=false;p.insHome=false;log('保険には入らないことにしました','info','🛡',false,'c');}}]);}
+  if(id==='jobhunt'){use();jobOffer('🔍 転職','転職先の候補が見つかりました。',true);}
+  if(id==='migrate'){ask('🌐 海外移住',`豊かな国へ移り住むことを目指します。<div class="q">費用：${yen(a.cost)}<br>成功の見込み：およそ${Math.round((.45+p.know/300+(p.abroad?.2:0))*100)}%<br>家族や友人とは離れることになります</div>`,[
+    {label:'移住を目指す',fn:()=>{use();payCost(a.cost);p.migrated=true;
+      if(chance(.45+p.know/300+(p.abroad?.2:0))){const d=weightedPick(COUNTRIES.filter(x=>x.gdp>=40),x=>x.pop),old=p.c;p.c=d;
+        const nq=buildQx(d,p.sex);p.qx=p.qx.map((v,i)=>i<p.age?v:(v+nq[i])/2);
+        p.incomePct=clamp(p.incomePct*.5,.02,.5);if(p.job&&!p.retired)recalcIncome();p.bond-=12;p.happy-=3;
+        log(`${old.name}を離れ、${d.name}に移り住みました`,'big','🛬',true,'c');}
+      else{p.happy-=8;log('移住の手続きがうまくいかず、費用だけがかかってしまいました','bad','🛂',true,'f');}}},
+    {label:'やめておく'}]);}
+  if(id==='biz'){ask('🚀 商売を始める',`貯金から ${yen(a.cost)} を元手に、自分の商売を始めますか？<div class="q">毎年、大きくもうかることも、赤字になることもあります。知識が高く「仕事に打ち込む」ほど有利です。</div>`,[
+    {label:'始める',fn:()=>{use();payCost(a.cost);p.biz=true;log(`${pick(['小さな食堂','雑貨のお店','修理屋','オンラインのお店','運送の仕事'])}を始めました`,'info','🚀',true,'c');}},
+    {label:'やめておく'}]);}
+  openNextModal();render();
+}
+
+/* ============================================================
+   節目・死・誕生
+   ============================================================ */
+function milestone(){
+  const alive=others.filter(o=>o.death>=P.age).length,sv=survival(buildQx(P.origin,P.sex),P.age)*100;
+  ask(`🌿 ${P.age}歳の節目`,`<div class="q">健康 ${Math.round(P.health)} ／ 幸福 ${Math.round(P.happy)} ／ 知識 ${Math.round(P.know)} ／ 絆 ${Math.round(P.bond)}<br>
+    暮らしの水準：世界の中で <b>下から${Math.round(worldPct(livingIncome()))}%</b><br>
+    ${P.origin.name}で同じ年に生まれた人のうち、いま生きているのは約${sv.toFixed(0)}%</div>
+    <p>同じ瞬間に生まれた4人のうち、いまも生きているのは <b>${alive}人</b> です。<br>これまでに自分で選んだこと：<b>${P.choices.length}</b>個 ／ 運命で決まったこと：<b>${P.fates.length}</b>個</p>
+    <div class="q">💭 ${MILESTONES[P.age]}</div>`,[{label:'人生を続ける',auto:1}]);
+}
+function causeOfDeath(){
+  const a=P.age,c=P.c;
+  if(P.illness&&chance(.6))return P.illness;
+  if(a<1)return pick(['生まれてまもない時期の合併症','早産による合併症','感染症']);
+  if(a<5)return pick(c.malaria>.5?['マラリア','肺炎','下痢による脱水','栄養不良にともなう病気']:['肺炎','生まれつきの病気','不慮の事故']);
+  if(a<15)return pick(['不慮の事故','感染症','病気']);
+  if(a<45){const l=['交通事故','病気','不慮の事故'];if(c.gdp<10)l.push('感染症','結核');if(c.conflict>.3)l.push('紛争に巻き込まれたこと');return pick(l);}
+  if(a<75){const l=['心臓の病気','がん','脳卒中','肝臓の病気','糖尿病の合併症'];if(c.gdp<10)l.push('結核','感染症');return pick(l);}
+  return pick(['心臓の病気','脳卒中','がん','肺炎','老衰','老衰']);
+}
+function die(){
+  P.alive=false;P.cause=causeOfDeath();stopLoop();skipping=false;
+  P.years.push({age:P.age,happy:P.happy,icon:'🌷',end:true});
+  log(P.age===0?`生まれて1年を迎える前に、${P.cause}で亡くなりました`:`${P.age}歳で、${P.cause}により亡くなりました`,'big','🌷',true,'f');
+  render();setTimeout(showEnd,1800);
+}
+function birthReveal(){
+  const box=$('#modal-box');modalOpen=true;$('#modal').hidden=false;
+  box.innerHTML=`<h2>📜 出生の記録</h2><div class="roulette" id="roul">…</div><div id="bd"></div><div class="choices"></div>`;
+  let n=0;const iv=setInterval(()=>{
+    const r=pick(COUNTRIES);$('#roul').textContent=`${REGION_ICON(r.region)} ${r.name}`;
+    if(++n>(P.gen>1?3:22)){clearInterval(iv);
+      const c=P.c,w=Math.min(4,Math.floor(P.wealthP*5));
+      const share=(settings.mode==='births'?c.births/COUNTRIES.reduce((a,x)=>a+x.births,0):c.pop/COUNTRIES.reduce((a,x)=>a+x.pop,0))*100;
+      $('#roul').innerHTML=`${REGION_ICON(c.region)} ${c.name}`;
+      $('#bd').innerHTML=`<p><b>${P.name}</b>さんは、${c.region}の<b>${c.name}</b>で<b>${sexWord(P.sex,0)}</b>として生まれました。</p>
+        <div class="q">家の暮らし向き：<b>${WEALTH_LABEL[w]}</b>（国内で下から${Math.round(P.wealthP*100)}%）<br>
+        家の所得水準：世界の中で下から ${Math.round(worldPct(familyIncome()))}%<br>
+        平均寿命：${c.le}歳 ／ 乳児死亡率：1000人に${c.imr}人<br>
+        <small>このゲームで${c.name}に生まれる確率：約${share.toFixed(1)}%</small></div>
+        ${P.gen>1?`<div class="q">🌳 <b>第${P.gen}世代</b>：${P.parentName}さんの子どもとして生まれました。<br>
+          この生まれは、${P.parentName}さんの選んだ暮らしから決まりました。${P.eduBonus?'<br>親が学んだことで、学校に通いやすくなっています。':''}${P.legacy>0?`<br>親が亡くなったとき、${yen(P.legacy)}を受け継ぐ予定です。`:''}</div>`:''}
+        <p style="font-size:13px;color:var(--sub)">${P.gen>1?'あなた自身には、やはり選べませんでした。':'ここまでは、あなたには選べませんでした。'}ここから先は、選べることが少しずつ増えていきます。</p>`;
+      log(`${c.name}で${sexWord(P.sex,0)}として生まれました（家の暮らし向き「${WEALTH_LABEL[w]}」）`,'big','👶',true,'f');
+      P.years.push({age:0,happy:P.happy,icon:'👶'});
+      const b=document.createElement('button');b.innerHTML='<b>人生をはじめる</b>';
+      b.onclick=()=>{$('#modal').hidden=true;modalOpen=false;startLoop();};
+      box.querySelector('.choices').appendChild(b);render();
+    }},70);
+}
+
+/* ============================================================
+   描画
+   ============================================================ */
+const hueOf=h=>`hsl(${Math.round(210-h*1.8)},65%,${78-h*.15}%)`;
+function focusOptions(){
+  if(P.age<6)return[];
+  if(!P.job&&!P.retired)return['study','play','help','health'];
+  const o=['work','study','health','people','rest'];
+  return P.retired?o.filter(x=>x!=='work'):o;
+}
+function avatar(){const a=P.age,m=P.sex==='male';if(!P.alive)return'🌷';if(a<3)return'👶';if(a<13)return m?'👦':'👧';if(a<60)return m?'👨':'👩';return m?'👴':'👵';}
+function render(){
+  if(!P)return;
+  $('#age').textContent=P.age;$('#yearlbl').textContent=`${P.birthYear+P.age}年`;
+  const c=P.c,w=Math.min(4,Math.floor(P.wealth0*5));
+  const bar=(k,label,col)=>`<div class="stat"><div class="row"><span>${label}</span><span>${Math.round(P[k])}</span></div><div class="bar"><i style="width:${P[k]}%;background:${col}"></i></div></div>`;
+  const status=P.inSchool?SCHOOL_LABEL[P.school]:EDU_LABEL[P.eduLevel];
+  const fam=[P.married?`${P.partner}さんと結婚`:(P.widowed?'パートナーと死別':'独身'),P.children?`子ども${P.children}人`:''].filter(Boolean).join('・');
+  const own=[P.house?`${P.house.icon}${P.house.name}`:'',P.units>0?'📈投資':'',P.insLife?'🩺医療保険':'',P.insHome?'🛡災害保険':'',P.biz?'🚀商売':'',P.side?'🌙副業':'',P.rehired?'🧑‍🔧再就職':'',P.abroad?`✈️${P.abroad.name}留学`:'',EDU_POLICY[P.eduPolicy]?`${EDU_POLICY[P.eduPolicy].icon}${EDU_POLICY[P.eduPolicy].label}`:''].filter(Boolean).join(' ');
+  $('#profile').innerHTML=`
+    <div class="who"><div class="avatar">${avatar()}</div><div><div class="nm">${P.name}<span class="genbadge">第${P.gen}世代</span></div>
+      <small>${REGION_ICON(c.region)} ${c.name}${P.origin!==c?`（${P.origin.name}生まれ）`:''}・${sexWord(P.sex,P.age)}</small></div></div>
+    ${bar('health','❤️ 健康','#d9534f')}${bar('happy','☀️ 幸福','#f0ad4e')}${bar('know','📘 知識','#3b7dd8')}${bar('bond','🤝 絆','#5cb85c')}
+    <dl class="kv">
+      <dt>生まれた家</dt><dd>${WEALTH_LABEL[w]}</dd>
+      <dt>学び</dt><dd>${status}${P.field&&P.eduLevel>=4?`（${FIELDS[P.field].label}）`:''}</dd>
+      <dt>仕事</dt><dd>${P.retired?'引退':P.unemployed?'求職中':P.job?`${P.jobIcon} ${P.job}`:'—'}</dd>
+      <dt>家族</dt><dd>${P.age<18?'親と暮らす':fam}</dd>
+      <dt>${P.job||P.retired?'年収':'家の所得'}</dt><dd>${yen((P.job||P.retired?P.income:familyIncome())*100)}</dd>
+      <dt>貯金</dt><dd>${yen(P.savings)}</dd>
+      ${P.debt>0?`<dt>借金</dt><dd style="color:var(--bad)">${yen(P.debt)}</dd>`:''}
+      <dt>総資産</dt><dd>${yen(assets())}</dd>
+      <dt>持ちもの</dt><dd style="font-size:12px">${own||'—'}</dd>
+      <dt>世界での暮らし</dt><dd>下から${Math.round(worldPct(livingIncome()))}%</dd>
+    </dl>
+    <small>金額は購買力平価ドルを日本の物価におよそ換算した「体感額」です。</small>`;
+  // 重点
+  const opts=focusOptions();if(opts.length&&!opts.includes(P.focus))P.focus=opts[0];
+  $('#focus-btns').innerHTML=opts.map(k=>`<button data-f="${k}" class="${P.focus===k?'on':''}"><span class="i">${FOCUS[k].icon}</span>${FOCUS[k].label}<small>${FOCUS[k].desc}</small></button>`).join('');
+  $('#focus-btns').querySelectorAll('button').forEach(b=>b.onclick=()=>{P.focus=b.dataset.f;render();});
+  $('#focus-note').textContent=opts.length?'':'まだ小さいので、家族に見守られて過ごしています。';
+  // 暮らし方
+  $('#spend-card').hidden=P.age<15;
+  $('#spend-btns').innerHTML=Object.entries(SPEND).map(([k,s])=>`<button data-k="${k}" class="${P.spend===k?'on':''}"><span class="i">${s.icon}</span>${s.label}<small>${s.desc}</small></button>`).join('');
+  $('#spend-btns').querySelectorAll('button').forEach(b=>b.onclick=()=>{P.spend=b.dataset.k;render();});
+  // 行動
+  const acts=P.alive?actionList():[];
+  $('#act-card').hidden=!acts.length;
+  $('#act-left').textContent=P.actUsed?'（今年はもう行動しました）':'（今年あと1回）';
+  $('#actions').innerHTML=acts.map(a=>`<button data-a="${a.id}" ${P.actUsed?'disabled':''}>${a.icon} ${a.label}${a.cost?` <small>${yen(a.cost)}・${a.hint}</small>`:`<small>${a.hint}</small>`}</button>`).join('');
+  $('#actions').querySelectorAll('button').forEach(b=>b.onclick=()=>doAction(b.dataset.a));
+  // 地図
+  const cells=Math.max(100,Math.ceil((P.age+1)/10)*10);let mh='';
+  for(let i=0;i<cells;i++){const y=P.years.find(v=>v.age===i);mh+=`<div class="${i===P.age&&P.alive?'now':''}" title="${i}歳" style="${y?`background:${y.end?'#999':hueOf(y.happy)}`:''}">${y&&y.icon?y.icon:''}</div>`;}
+  $('#map').innerHTML=mh;
+  renderSurv();
+  // スマホ用のステータス帯
+  const mb=(v,col,ic)=>`<div>${ic} ${Math.round(v)}<div class="bar"><i style="width:${v}%;background:${col}"></i></div></div>`;
+  $('#mstat').innerHTML=mb(P.health,'#d9534f','❤️')+mb(P.happy,'#f0ad4e','☀️')+mb(P.know,'#3b7dd8','📘')+mb(P.bond,'#5cb85c','🤝')+`<div class="mm">💰${yen(P.savings)}</div>`;
+  // 4人
+  $('#others').innerHTML=others.map((o,i)=>{const gone=o.death<P.age,n=otherNews(o);
+    const canHelp=!gone&&P.alive&&P.age>=15&&!P.actUsed;
+    return `<li class="${gone?'gone':''}">${REGION_ICON(o.c.region)} <b>${o.name}</b>（${o.c.name}・${o.sex==='male'?'男':'女'}）${o.met?' 🤝':''}${o.helped?' 💝':''}<br>
+      <span class="s">${gone?`🌷 ${o.death}歳で亡くなりました`:`${P.age}歳・生きています`}${n?`<br>${n.age}歳：${n.text}`:''}</span>
+      ${!gone&&P.age>=15?`<br><button class="helpbtn" data-i="${i}" ${canHelp?'':'disabled'}>🤲 支える</button>`:''}</li>`;}).join('');
+  $('#others').querySelectorAll('.helpbtn').forEach(b=>b.onclick=()=>helpOther(+b.dataset.i));
+}
+function renderSurv(){
+  const q=P.survQ||(P.survQ=buildQx(P.origin,P.sex)),W=260,H=120,pts=[];
+  let S=1;for(let x=0;x<=100;x++){pts.push(`${(x/100*W).toFixed(1)},${(H-S*H).toFixed(1)}`);S*=1-q[x];}
+  const cur=survival(q,P.age),cx=P.age/100*W,cy=H-cur*H;
+  $('#surv').innerHTML=`<svg viewBox="-24 -6 ${W+30} ${H+24}">
+    <line x1="0" y1="${H}" x2="${W}" y2="${H}" stroke="#ccc"/><line x1="0" y1="0" x2="0" y2="${H}" stroke="#ccc"/>
+    <text x="-4" y="4" font-size="9" text-anchor="end" fill="#999">100%</text><text x="-4" y="${H}" font-size="9" text-anchor="end" fill="#999">0%</text>
+    ${[0,20,40,60,80,100].map(v=>`<text x="${v/100*W}" y="${H+12}" font-size="9" text-anchor="middle" fill="#999">${v}</text>`).join('')}
+    <polyline points="${pts.join(' ')}" fill="none" stroke="#2f7d6d" stroke-width="2"/>
+    <circle cx="${cx}" cy="${cy}" r="4.5" fill="${P.alive?'#c8643b':'#999'}"/></svg>
+    <small>${P.origin.name}で同じ年に生まれた${P.sex==='male'?'男性':'女性'}のうち、${P.age}歳で生きている割合：約${(cur*100).toFixed(0)}%</small>`;
+}
+
+/* ============================================================
+   ループ
+   ============================================================ */
+function startLoop(){
+  stopLoop();elapsed=0;
+  loopId=setInterval(()=>{
+    if(!P||!P.alive||modalOpen)return;
+    if(skipping){yearStep();return;}
+    if(speed===0)return;
+    elapsed+=100*speed;$('#prog').style.width=Math.min(100,elapsed/settings.yearMs*100)+'%';
+    if(elapsed>=settings.yearMs){elapsed=0;yearStep();}
+  },100);
+}
+function stopLoop(){if(loopId)clearInterval(loopId);loopId=null;}
+// スマホ：下のタブで画面を切りかえる
+function setTab(t){
+  $('#panes').dataset.tab=t;
+  document.querySelectorAll('#mnav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  if(t==='world')$('#world-dot').hidden=true;
+  window.scrollTo(0,0);
+}
+$('#mnav').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setTab(b.dataset.tab);});
+$('#speed').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.id==='step'){if(!modalOpen){elapsed=0;yearStep();}return;}
+  if(b.id==='skip'){skipping=true;return;}
+  speed=+b.dataset.s;skipping=false;
+  document.querySelectorAll('#speed button[data-s]').forEach(x=>x.classList.toggle('on',x===b));
+});
+
+/* ============================================================
+   最期の記録
+   ============================================================ */
+/* ============================================================
+   世代をつなぐ
+   ============================================================ */
+function normCdf(x){const t=1/(1+.3275911*Math.abs(x)/Math.SQRT2),y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x/2);return .5*(1+(x>=0?y:-y));}
+function summarizeLife(){
+  return {gen:P.gen,name:P.name,origin:P.origin.name,died:P.c.name,sex:P.sex,birthYear:P.birthYear,age:P.age,cause:P.cause,
+    wealth:WEALTH_LABEL[Math.min(4,Math.floor(P.wealth0*5))],edu:EDU_LABEL[P.eduLevel],job:P.job,children:P.children,
+    assets:Math.max(0,assets()),helped:P.helpedNow,choices:P.choices.length,fates:P.fates.length,migrated:P.origin!==P.c};
+}
+function kidInheritance(k){
+  const base=k.incPct>0?k.incPct:P.wealth0;
+  const bonus=clamp(Math.log(Math.max(1,P.peakAssets)/M(P.c))/8,-.1,.25);
+  const pol=EDU_POLICY[P.eduPolicy]||{edu:0,wealth:0};
+  const wealthP=clamp(.65*base+.35*Math.random()+bonus+pol.wealth,.02,.98);
+  const legacy=Math.max(0,assets())*.85/Math.max(1,P.kids.length);
+  const eduBonus=clamp(Math.min(.18,Math.max(0,P.eduLevel-1)*.06)+pol.edu+(k.support?.08:0),0,.35);
+  return {wealthP,legacy,eduBonus};
+}
+function nextGenHtml(){
+  if(!P.kids.length) return `<div class="card" style="margin-top:12px"><h3>🌱 次の世代</h3><p style="margin:0">子どもがいないため、この家系の物語はここで終わります。${P.lineage.length?'これまでの家系の記録を見てみましょう。':''}</p></div>`;
+  P.kids.forEach(k=>{if(!k.inh)k.inh=kidInheritance(k);});
+  return `<div class="card" style="margin-top:12px"><h3>🌱 次の世代へ ── 子どもとして人生を続ける</h3>
+    <p style="margin:0;font-size:14px">あなたの選択が、子どもの「生まれ」になります。誰の人生を生きますか？</p>
+    <div class="kidpick">${P.kids.map((k,i)=>`<button data-k="${i}"><span class="ji">${k.sex==='male'?'👦':'👧'}</span><b>${k.name}</b>
+      <small>${P.birthYear+k.bornAt}年 ${k.c.name}生まれ<br>家の暮らし向き：${WEALTH_LABEL[Math.min(4,Math.floor(k.inh.wealthP*5))]}<br>
+      受け継ぐもの：${yen(k.inh.legacy)}${k.inh.eduBonus?`<br>学校に通いやすい（親の学び）`:''}</small></button>`).join('')}</div></div>`;
+}
+let lineageDone=false;
+function continueAs(i){
+  const k=P.kids[i],inh=k.inh;
+  begin(k.name,{c:k.c,sex:k.sex,wealthP:inh.wealthP,year:P.birthYear+k.bornAt,gen:P.gen+1,lineage:P.lineage,eduBonus:inh.eduBonus,
+    legacy:inh.legacy,parentDeathAge:P.age-k.bornAt,parentName:P.name,bond:P.bond+((EDU_POLICY[P.eduPolicy]||{}).bond||0),helpedCount:P.helpedCount,helpedYears:P.helpedYears});
+}
+function showFamily(){
+  const L=P.lineage,first=L[0],last=L[L.length-1];
+  const years=L.reduce((a,l)=>a+l.age,0);
+  $('#end-screen').innerHTML=`
+    <div class="card epitaph"><div class="icon">🌳</div><h1>${first.name}の家系</h1>
+      <p>${first.birthYear}年 〜 ${last.birthYear+last.age}年 ／ ${L.length}世代・あわせて${years}年の人生</p></div>
+    <div class="facts">
+      <div class="fact"><span>はじまりの国</span><b>${first.origin}</b></div>
+      <div class="fact"><span>いまの国</span><b>${last.died}</b></div>
+      <div class="fact"><span>生まれた家の変化</span><b style="font-size:15px">${first.wealth} → ${last.wealth}</b></div>
+      <div class="fact"><span>支えた「同じ瞬間の人」</span><b>${P.helpedCount}人</b></div>
+      <div class="fact"><span>支援で延びたかもしれない寿命</span><b>約${P.helpedYears}年</b></div>
+    </div>
+    <div class="gens">${L.map(l=>`<div class="card genc"><div class="h"><b>第${l.gen}世代　${l.name}</b><span>${l.birthYear}年 ${l.origin}生まれ${l.migrated?` → ${l.died}`:''}・${l.sex==='male'?'男':'女'}</span></div>
+      <div style="font-size:14px">生まれた家「${l.wealth}」／ ${l.edu} ／ ${l.job||'—'} ／ 子ども${l.children}人 ／ ${l.age}歳・${l.cause}<br>
+      <small>自分で選んだこと ${l.choices}個 ・ 運命 ${l.fates}個 ・ 遺したもの ${yen(l.assets)}${l.helped?` ・ 支援で延びた寿命 約${l.helped}年`:''}</small></div></div>`).join('')}</div>
+    <div class="card" style="margin-top:12px"><div class="q" style="margin:0">💭 ${first.name}さんは自分の生まれを選べませんでした。けれど、その選択は${L.length>1?`${L.length-1}世代あとの${last.name}さんの生まれを形づくりました`:'次の世代の生まれを形づくるはずでした'}。<br>あなたの今日の選択は、誰の「生まれ」になるでしょう？</div></div>
+    <div class="end-actions"><button class="btn" id="again2">新しい家系で生まれる</button><button class="btn ghost" id="totitle2">タイトルへ</button></div>`;
+  window.scrollTo(0,0);
+  $('#again2').onclick=()=>begin($('#name').value.trim()||'名無し');
+  $('#totitle2').onclick=()=>{$('#end-screen').hidden=true;$('#title-screen').hidden=false;showPast();};
+}
+
+function showEnd(){
+  $('#modal').hidden=true;modalOpen=false;modalQueue=[];
+  P.lineage=P.lineage.concat([summarizeLife()]);
+  const c=P.c,o=P.origin,sv=survival(buildQx(o,P.sex),P.age)*100;
+  const avgH=P.years.reduce((a,y)=>a+y.happy,0)/P.years.length;
+  let mh='';const cells=Math.max(100,Math.ceil((P.age+1)/20)*20);
+  for(let i=0;i<cells;i++){const y=P.years.find(v=>v.age===i);mh+=`<div title="${i}歳" style="background:${y?(y.end?'#999':hueOf(y.happy)):'#efe8da'}">${y&&y.icon?y.icon:''}</div>`;}
+  const text=`Life Relay ─ 生命の巡り ─ で、${o.name}に${sexWord(P.sex,0)}として生まれ、${P.age}歳まで生きました。自分で選んだこと${P.choices.length}個、運命で決まったこと${P.fates.length}個。`;
+  $('#end-screen').innerHTML=`
+    <div class="card epitaph"><div class="icon">🌷</div><h1>${P.name}</h1>
+      <p>${P.birthYear}年 ${o.name}生まれ — ${P.birthYear+P.age}年 ${c!==o?c.name+'にて':''}没<br>享年 <b>${P.age}歳</b>・${P.cause}</p></div>
+    <div class="facts">
+      <div class="fact"><span>生まれた国の平均寿命</span><b>${o.le}歳</b></div>
+      <div class="fact"><span>同じ国・性別で ${P.age}歳まで生きる割合</span><b>約${sv.toFixed(0)}%</b></div>
+      <div class="fact"><span>学び</span><b>${EDU_LABEL[P.eduLevel]}</b></div>
+      <div class="fact"><span>おもな仕事</span><b>${P.job||'—'}</b></div>
+      <div class="fact"><span>家族</span><b>${P.married||P.widowed?'パートナーあり':'独身'}${P.children?`・子ども${P.children}人`:''}</b></div>
+      <div class="fact"><span>最も多かった総資産</span><b>${yen(P.peakAssets)}</b></div>
+      <div class="fact"><span>平均の幸福度</span><b>${Math.round(avgH)}</b></div>
+      <div class="fact"><span>寄付した金額</span><b>${yen(P.donated)}</b></div>
+    </div>
+    <div class="card"><h3>人生地図</h3><div id="end-map">${mh}</div></div>
+    <div class="two">
+      <div class="card"><h3 style="color:var(--choice)">🧭 自分で選んだこと（${P.choices.length}）</h3><ul>${P.choices.map(s=>`<li>${s}</li>`).join('')||'<li>—</li>'}</ul></div>
+      <div class="card"><h3 style="color:var(--accent2)">🎲 生まれや運で決まったこと（${P.fates.length}）</h3><ul>${P.fates.map(s=>`<li>${s}</li>`).join('')}</ul></div>
+    </div>
+    <div class="card" style="margin-top:12px"><h3>同じ瞬間に生まれた4人のその後</h3>
+      <ul style="padding-left:18px;margin:0">${others.map(x=>`<li>${x.name}（${x.c.name}・${x.sex==='male'?'男':'女'}）— ${x.death===0?'1歳を迎える前に亡くなりました':`${x.death}歳まで生きました`}</li>`).join('')}</ul></div>
+    <div class="card" style="margin-top:12px"><div class="q" style="margin:0">💭 あなたが選んだことのうち、生まれた場所が違っても選べたものはいくつあったでしょう？<br>世界では毎年およそ1億3000万人の赤ちゃんが生まれ、その誰もが生まれる場所を選べません。</div></div>
+    ${nextGenHtml()}
+    <div class="end-actions">${P.lineage.length?'<button class="btn ghost" id="family">家系の記録を見る</button>':''}<button class="btn ghost" id="again">新しい家系で生まれる</button><button class="btn ghost" id="copy">結果をコピー</button><button class="btn ghost" id="totitle">タイトルへ</button></div>`;
+  saveLife();
+  $('#game').hidden=true;$('#end-screen').hidden=false;window.scrollTo(0,0);
+  $('#end-screen').querySelectorAll('.kidpick button').forEach(b=>b.onclick=()=>continueAs(+b.dataset.k));
+  if($('#family'))$('#family').onclick=showFamily;
+  $('#again').onclick=()=>begin($('#name').value.trim()||'名無し');
+  $('#totitle').onclick=()=>{$('#end-screen').hidden=true;$('#title-screen').hidden=false;showPast();};
+  $('#copy').onclick=()=>{navigator.clipboard?.writeText(text).then(()=>{$('#copy').textContent='コピーしました';});};
+}
+const KEY='inochikuji_lives';
+function loadLives(){try{return JSON.parse(localStorage.getItem(KEY)||'[]');}catch(e){return[];}}
+function saveLife(){
+  const arr=loadLives();
+  arr.unshift({name:P.name,country:P.origin.name,sex:P.sex,age:P.age,cause:P.cause,job:P.job,ch:P.choices.length,date:new Date().toLocaleDateString('ja-JP')});
+  try{localStorage.setItem(KEY,JSON.stringify(arr.slice(0,10)));}catch(e){}
+}
+function showPast(){
+  const arr=loadLives();$('#past').hidden=!arr.length;
+  $('#past-list').innerHTML=arr.map(l=>`<li>${l.date}　<b>${l.name}</b>：${l.country}の${l.sex==='male'?'男の子':'女の子'}として生まれ、${l.age}歳まで（${l.cause}）${l.job?'・'+l.job:''}</li>`).join('');
+}
+
+/* ============================================================
+   開始
+   ============================================================ */
+function begin(name,inh=null){
+  settings.mode=document.querySelector('input[name=mode]:checked').value;
+  settings.yearMs=40000; // 1×で1年＝約40秒、2×で約20秒
+  settings.gentle=$('#gentle').checked;
+  modalQueue=[];modalOpen=false;skipping=false;
+  newLife(name,inh);
+  $('#log').innerHTML='';
+  $('#title-screen').hidden=true;$('#end-screen').hidden=true;$('#game').hidden=false;
+  setTab('life');render();birthReveal();
+}
+$('#start').onclick=()=>begin(($('#name').value||'').trim()||'名無し');
+$('#name').addEventListener('keydown',e=>{if(e.key==='Enter')$('#start').click();});
+showPast();
+</script>
+</body>
+</html>
