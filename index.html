@@ -38,6 +38,13 @@
   .opts input{margin-right:6px}
   .opts label:has(input:checked){border-color:var(--accent);background:#eaf5f2}
   .start-row{text-align:center}
+  .resume{margin-bottom:14px;border:2px solid var(--accent);display:grid;gap:8px}
+  .resume .btn{justify-self:start}
+  .mottos{margin-top:12px}
+  .mottos .opts label{display:flex;flex-direction:column;gap:0;flex:1 1 150px}
+  .mottos .opts label small{font-size:11px}
+  .codebox{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .codebox b{font-size:20px;letter-spacing:.12em}
   .start-row .btn{font-size:20px;padding:14px 44px;border-radius:999px}
   .note{font-size:12.5px;color:var(--sub)}
   #past ul{padding:0;margin:0} #past li{list-style:none;font-size:13px;padding:4px 0;border-bottom:1px dashed var(--line)}
@@ -192,8 +199,15 @@
     <div class="subtitle">─ 生命の巡り ─</div>
     <div class="tag">自分の生まれは選べない。<br>でも、あなたの選択は、子どもの「生まれ」になる。</div>
   </div>
+  <div id="resume" class="card resume" hidden>
+    <h3>💾 続きから遊ぶ</h3><div id="resume-info"></div>
+    <button class="btn" id="resume-btn">続きから遊ぶ</button>
+  </div>
   <div class="setup card">
     <div><label class="lbl" for="name">あなたの名前</label><input type="text" id="name" maxlength="12" placeholder="例：ひかり"></div>
+    <div><label class="lbl" for="code">生まれのコード <small>（任意）</small></label>
+      <input type="text" id="code" maxlength="8" placeholder="例：B-7KQ2M" autocomplete="off" autocapitalize="characters">
+      <small id="code-note">友だちから受け取ったコードを入れると、同じ生まれ（国・家・同じ瞬間の4人）から始まります。空欄なら新しい生まれになります。</small></div>
     <div><span class="lbl">生まれる国の決まり方</span>
       <div class="opts">
         <label><input type="radio" name="mode" value="births" checked>いま生まれる赤ちゃんの数に比例</label>
@@ -355,7 +369,7 @@ const NAMES={
 function nameGroup(c){
   if(NAMES[c.id])return NAMES[c.id];
   if(['EG','SD','IQ','IR','TR','SA','YE'].includes(c.id))return NAMES['中東'];
-  for(const k of ['アフリカ','南アジア','東南アジア','ヨーロッパ','オセアニア'])if(c.region.includes(k))return NAMES[k];
+  for(const k of ['アフリカ','東南アジア','南アジア','ヨーロッパ','オセアニア'])if(c.region.includes(k))return NAMES[k];
   return NAMES['アメリカ'];
 }
 const pickName=(c,sex)=>pick(nameGroup(c)[sex==='male'?0:1]);
@@ -422,6 +436,15 @@ const FIELDS={
   lang:{label:'国際・語学',icon:'🌐',jobs:[['通訳','🗣',.6],['翻訳家','📖',.52],['ツアーガイド','🧭',.45],['外交官','🌏',.8],['航空会社の客室乗務員','✈️',.58],['ホテルの支配人','🏨',.6]]},
   art:{label:'芸術・メディア',icon:'🎨',jobs:[['デザイナー','🎨',.55],['音楽家','🎻',.35],['映像クリエイター','🎬',.5],['漫画家','✒️',.4],['記者','📰',.58],['写真家','📷',.42],['俳優','🎭',.3],['建築デザイナー','🏛',.6]]},
 };
+// 家訓：亡くなるときに子どもへ残す。次の世代に小さな効果
+const MOTTOS={
+  learn:{label:'学びを大切に',icon:'📚',desc:'知識と学校の通いやすさが少し上がる',start:p=>{p.know+=6;p.eduBonus=Math.min(.4,p.eduBonus+.05);}},
+  help:{label:'人を助けよ',icon:'🤲',desc:'4人への支援が安くなり、支えるほど心が満たされる',start:p=>{p.bond+=4;}},
+  health:{label:'健康第一',icon:'🏃',desc:'健康が高く生まれ、「体を大事に」の効果が上がる',start:p=>{p.health+=6;}},
+  family:{label:'家族を大切に',icon:'🏡',desc:'絆が高く生まれ、出会いが増える',start:p=>{p.bond+=8;}},
+  challenge:{label:'挑戦を恐れるな',icon:'🚀',desc:'商売や海外移住が成功しやすい',start:p=>{}},
+  thrift:{label:'倹約は力なり',icon:'🪙',desc:'節約しても幸福が下がりにくく、貯金がたまりやすい',start:p=>{}},
+};
 // 子どもの教育方針：edu=次世代の学校の通いやすさ / wealth=次世代の家の豊かさ / bond=次世代の絆 / myBond=自分の絆
 const EDU_POLICY={
   free:{label:'のびのび育てる',icon:'🌻',desc:'お金はかからない。親子の絆が深まる',edu:0,wealth:0,bond:10,myBond:5,auto:1.5},
@@ -440,7 +463,22 @@ const JOBS=[
 ];
 
 // inh：前の世代から受け継ぐもの（null なら第1世代）
-function newLife(name,inh=null){
+/* ---------- 生まれのコード：同じコードなら同じ生まれ（国・性別・家・4人）になる ---------- */
+const CODE_CHARS='23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+function makeCode(){let c=settings.mode==='births'?'B':'P';for(let i=0;i<5;i++)c+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)];return c;}
+function normCode(t){t=(t||'').toUpperCase().replace(/[^A-Z0-9]/g,'');return /^[BP][A-Z0-9]{5}$/.test(t)?t:null;}
+const showCode=c=>c?`${c[0]}-${c.slice(1)}`:'';
+function seededRandom(str){let h=2166136261;for(const ch of str){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}
+  return function(){h|=0;h=h+0x6D2B79F5|0;let t=Math.imul(h^h>>>15,1|h);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function newLife(name,inh=null,code=null){
+  const real=Math.random;
+  if(!inh){ if(code)settings.mode=code[0]==='B'?'births':'pop'; else code=makeCode(); Math.random=seededRandom(code); }
+  try{ newLifeCore(name,inh); } finally { Math.random=real; }
+  P.code=inh?(inh.code||null):code; P.firstGenCode=inh?inh.firstGenCode:code;
+  P.motto=inh?(inh.motto||null):null; P.mottoFrom=inh?(inh.mottoFrom||null):null;
+  if(P.motto&&MOTTOS[P.motto]){MOTTOS[P.motto].start(P);clampAll();}
+}
+function newLifeCore(name,inh=null){
   const c=inh?inh.c:weightedPick(COUNTRIES,x=>settings.mode==='births'?x.births:x.pop);
   const sex=inh?inh.sex:(chance(.512)?'male':'female'),wealthP=inh?inh.wealthP:Math.random();
   P={name,c,origin:c,sex,wealthP,wealth0:wealthP,age:0,birthYear:inh?inh.year:new Date().getFullYear(),
@@ -510,13 +548,13 @@ function othersTick(){
 }
 function helpOther(i){
   const o=others[i];if(!o||o.death<P.age||P.actUsed||modalOpen||!P.alive||P.age<15)return;
-  const cost=M(P.c)*.15, ratio=Math.min(1.5,(cost/100)/meanInc(o.c));
+  const cost=M(P.c)*(P.motto==='help'?.1:.15), ratio=Math.min(1.5,(cost/100)/meanInc(o.c));
   ask(`🤲 ${o.name}さんを支える`,`${o.c.name}に暮らす${o.name}さん（${P.age}歳）に、${yen(cost)}の支援を送りますか？
     <div class="q">${o.c.name}の物価では、これは平均的な年収の約${Math.round(ratio*100)}%にあたります。<br>
     ${ratio>.5?'暮らしを大きく変えられるかもしれません。':ratio>.15?'暮らしの助けになりそうです。':'気持ちは届きますが、暮らしを変えるほどではないかもしれません。'}</div>`,[
     {label:'支援を送る',fn:()=>{
       P.actUsed=true;P.savings-=cost;if(P.savings<0){P.debt-=P.savings;P.savings=0;}
-      P.happy+=3;P.donated+=cost;o.helped++;
+      P.happy+=P.motto==='help'?6:3;P.donated+=cost;o.helped++;
       const before=o.death,e0=expLeft(o,P.age);o.qmult=Math.max(.5,o.qmult*Math.max(.45,1-.35*Math.min(1,ratio))); // 何度支えても死亡リスクは半分までしか下がらないo.wealthP=Math.min(.99,o.wealthP+.15*Math.min(1,ratio));
       const gain=Math.max(0,expLeft(o,P.age)-e0);
       let what='生活の助けになりました';
@@ -548,13 +586,16 @@ const isAuto=()=>$('#auto').checked;
    ============================================================ */
 // kind: 'c'=自分で選んだこと / 'f'=生まれや運で決まったこと
 function log(text,type='info',icon=null,star=false,kind=null){
-  const e={age:P.age,text,type,icon,star};
+  const e={age:P.age,text,type,icon,star,kind};
   P.log.push(e);
   if(kind==='c')P.choices.push(`${P.age}歳：${text}`);
   if(kind==='f')P.fates.push(`${P.age}歳：${text}`);
   if(icon&&(!P.yearIcon||star))P.yearIcon=icon;
-  const li=document.createElement('li');li.className=type;
-  li.innerHTML=`<span class="a">${P.age}歳</span>${kind?`<span class="k ${kind}">${kind==='c'?'選択':'運命'}</span>`:''}<span>${icon?icon+' ':''}${text}</span>`;
+  logLi(e);
+}
+function logLi(e){
+  const li=document.createElement('li');li.className=e.type;
+  li.innerHTML=`<span class="a">${e.age}歳</span>${e.kind?`<span class="k ${e.kind}">${e.kind==='c'?'選択':'運命'}</span>`:''}<span>${e.icon?e.icon+' ':''}${e.text}</span>`;
   $('#log').prepend(li);
 }
 // choices: [{label, desc, auto, fn}]  cards:true でカード表示
@@ -609,13 +650,13 @@ function applyFocus(){
       case'study':P.know+=P.inSchool?3:2;P.happy-=1;break;
       case'play':P.bond+=3;P.happy+=2;break;
       case'help':P.wealthP+=.006;P.bond+=1;P.know-=.5;break;
-      case'health':P.health+=2.5;break;
+      case'health':P.health+=P.motto==='health'?3.5:2.5;break;
       case'work':P.health-=1;P.bond-=1;break;
       case'people':P.bond+=3;P.happy+=2;break;
       case'rest':P.happy+=3;P.health+=.5;break;
     }
   }
-  if(P.age>=15){ if(P.spend==='save')P.happy-=2; if(P.spend==='rich'){P.happy+=2.5;P.health+=.8;} }
+  if(P.age>=15){ if(P.spend==='save')P.happy-=P.motto==='thrift'?.5:2; if(P.spend==='rich'){P.happy+=2.5;P.health+=.8;} }
   P.flags.workStreak=f==='work'?P.flags.workStreak+1:0;
   P.health+=(healthNorm(P.age)-P.health)*.08;
   if(livingIncome()<1500)P.health-=1.5;
@@ -706,7 +747,7 @@ function stageEvents(){
   if(P.school==='grad'&&a===P.gradEnd){P.eduLevel=5;leaveSchool();P.know+=5;log('大学院を修了しました','good','🎓',true);jobOffer('🎓 修了・就職','大学院を修了しました。');}
   // 結婚：2人の候補から選ぶ
   if(!P.married&&a>=20&&a<=55&&(P.flags.marryCool||0)<=a){
-    const p=.1*(.5+P.bond/100)*(c.gdp<10?1.4:1)*(a<38?1:.4)*(P.widowed?.4:1);
+    const p=.1*(P.motto==='family'?1.25:1)*(.5+P.bond/100)*(c.gdp<10?1.4:1)*(a<38?1:.4)*(P.widowed?.4:1);
     if(chance(p)){
       P.flags.marryCool=a+3;
       const os=P.sex==='male'?'female':'male',n1=pickName(c,os);let n2=pickName(c,os);if(n2===n1)n2=pickName(c,os);
@@ -861,7 +902,7 @@ function economy(){
   }else if(P.retired)P.income=P.pension;else P.income=0;
   if(P.job||P.retired){
     let rate=P.income<m*.4?.03:P.income<m?.08:.15;
-    rate+=P.spend==='save'?.1:P.spend==='rich'?-.1:0;
+    rate+=(P.motto==='thrift'?.03:0)+(P.spend==='save'?.1:P.spend==='rich'?-.1:0);
     rate-=Math.min(P.children,4)*.02*(P.age<55?1:0);
     P.savings+=(P.income+P.partnerInc*.5)*100*rate;
     if(P.flags.careCost&&P.parents>0)P.savings-=P.flags.careCost;
@@ -886,7 +927,7 @@ function economy(){
     if(P.eduPolicy==='help'&&P.kids.some(k=>P.age-k.bornAt>=10&&P.age-k.bornAt<18))P.savings+=mm*.04;
   }
   if(P.biz&&!P.retired){
-    const r=Math.random(),w=clamp(.35+P.know/250+(P.focus==='work'?.08:0),.3,.7),mm=M(P.c);
+    const r=Math.random(),w=clamp(.35+(P.motto==='challenge'?.08:0)+P.know/250+(P.focus==='work'?.08:0),.3,.7),mm=M(P.c);
     if(r<w){const g=mm*rnd(.5,2.5);P.savings+=g;log(`商売が好調でした（+${yen(g)}）`,'good','🚀');}
     else if(r<w+.3){const l=mm*rnd(.3,1.2);P.savings-=l;log(`商売が赤字でした（-${yen(l)}）`,'bad','📉');}
   }
@@ -1015,9 +1056,9 @@ function doAction(id){
     {label:'災害保険だけ',desc:`毎年 ${yen(m*.03)}`,fn:()=>{use();p.insLife=false;p.insHome=true;log('災害保険だけに入りました','info','🛡',false,'c');}},
     {label:'保険には入らない',fn:()=>{use();p.insLife=false;p.insHome=false;log('保険には入らないことにしました','info','🛡',false,'c');}}]);}
   if(id==='jobhunt'){use();jobOffer('🔍 転職','転職先の候補が見つかりました。',true);}
-  if(id==='migrate'){ask('🌐 海外移住',`豊かな国へ移り住むことを目指します。<div class="q">費用：${yen(a.cost)}<br>成功の見込み：およそ${Math.round((.45+p.know/300+(p.abroad?.2:0))*100)}%<br>家族や友人とは離れることになります</div>`,[
+  if(id==='migrate'){ask('🌐 海外移住',`豊かな国へ移り住むことを目指します。<div class="q">費用：${yen(a.cost)}<br>成功の見込み：およそ${Math.round((.45+p.know/300+(p.abroad?.2:0)+(p.motto==='challenge'?.1:0))*100)}%<br>家族や友人とは離れることになります</div>`,[
     {label:'移住を目指す',fn:()=>{use();payCost(a.cost);p.migrated=true;
-      if(chance(.45+p.know/300+(p.abroad?.2:0))){const d=weightedPick(COUNTRIES.filter(x=>x.gdp>=40),x=>x.pop),old=p.c;p.c=d;
+      if(chance(.45+p.know/300+(p.abroad?.2:0)+(p.motto==='challenge'?.1:0))){const d=weightedPick(COUNTRIES.filter(x=>x.gdp>=40),x=>x.pop),old=p.c;p.c=d;
         const nq=buildQx(d,p.sex);p.qx=p.qx.map((v,i)=>i<p.age?v:(v+nq[i])/2);
         p.incomePct=clamp(p.incomePct*.5,.02,.5);if(p.job&&!p.retired)recalcIncome();p.bond-=12;p.happy-=3;
         log(`${old.name}を離れ、${d.name}に移り住みました`,'big','🛬',true,'c');}
@@ -1051,7 +1092,7 @@ function causeOfDeath(){
   return pick(['心臓の病気','脳卒中','がん','肺炎','老衰','老衰']);
 }
 function die(){
-  P.alive=false;P.cause=causeOfDeath();stopLoop();skipping=false;
+  P.alive=false;P.cause=causeOfDeath();stopLoop();skipping=false;clearSave();
   P.years.push({age:P.age,happy:P.happy,icon:'🌷',end:true});
   log(P.age===0?`生まれて1年を迎える前に、${P.cause}で亡くなりました`:`${P.age}歳で、${P.cause}により亡くなりました`,'big','🌷',true,'f');
   render();setTimeout(showEnd,1800);
@@ -1070,8 +1111,9 @@ function birthReveal(){
         家の所得水準：世界の中で下から ${Math.round(worldPct(familyIncome()))}%<br>
         平均寿命：${c.le}歳 ／ 乳児死亡率：1000人に${c.imr}人<br>
         <small>このゲームで${c.name}に生まれる確率：約${share.toFixed(1)}%</small></div>
+        ${P.code?`<div class="q">🔑 生まれのコード：<b>${showCode(P.code)}</b><br><small>このコードを友だちに送ると、同じ生まれから始められます。同じ生まれでも、選択しだいで人生は変わります。</small></div>`:''}
         ${P.gen>1?`<div class="q">🌳 <b>第${P.gen}世代</b>：${P.parentName}さんの子どもとして生まれました。<br>
-          この生まれは、${P.parentName}さんの選んだ暮らしから決まりました。${P.eduBonus?'<br>親が学んだことで、学校に通いやすくなっています。':''}${P.legacy>0?`<br>親が亡くなったとき、${yen(P.legacy)}を受け継ぐ予定です。`:''}</div>`:''}
+          この生まれは、${P.parentName}さんの選んだ暮らしから決まりました。${P.eduBonus?'<br>親が学んだことで、学校に通いやすくなっています。':''}${P.legacy>0?`<br>親が亡くなったとき、${yen(P.legacy)}を受け継ぐ予定です。`:''}${P.motto?`<br>家訓「${MOTTOS[P.motto].icon} ${MOTTOS[P.motto].label}」を受け継ぎました（${MOTTOS[P.motto].desc}）。`:''}</div>`:''}
         <p style="font-size:13px;color:var(--sub)">${P.gen>1?'あなた自身には、やはり選べませんでした。':'ここまでは、あなたには選べませんでした。'}ここから先は、選べることが少しずつ増えていきます。</p>`;
       log(`${c.name}で${sexWord(P.sex,0)}として生まれました（家の暮らし向き「${WEALTH_LABEL[w]}」）`,'big','👶',true,'f');
       P.years.push({age:0,happy:P.happy,icon:'👶'});
@@ -1114,6 +1156,8 @@ function render(){
       ${P.debt>0?`<dt>借金</dt><dd style="color:var(--bad)">${yen(P.debt)}</dd>`:''}
       <dt>総資産</dt><dd>${yen(assets())}</dd>
       <dt>持ちもの</dt><dd style="font-size:12px">${own||'—'}</dd>
+      ${P.motto?`<dt>家訓</dt><dd>${MOTTOS[P.motto].icon} ${MOTTOS[P.motto].label}</dd>`:''}
+      ${P.code?`<dt>生まれのコード</dt><dd>${showCode(P.code)}</dd>`:''}
       <dt>世界での暮らし</dt><dd>下から${Math.round(worldPct(livingIncome()))}%</dd>
     </dl>
     <small>金額は購買力平価ドルを日本の物価におよそ換算した「体感額」です。</small>`;
@@ -1201,7 +1245,7 @@ function normCdf(x){const t=1/(1+.3275911*Math.abs(x)/Math.SQRT2),y=1-(((((1.061
 function summarizeLife(){
   return {gen:P.gen,name:P.name,origin:P.origin.name,died:P.c.name,sex:P.sex,birthYear:P.birthYear,age:P.age,cause:P.cause,
     wealth:WEALTH_LABEL[Math.min(4,Math.floor(P.wealth0*5))],edu:EDU_LABEL[P.eduLevel],job:P.job,children:P.children,
-    assets:Math.max(0,assets()),helped:P.helpedNow,choices:P.choices.length,fates:P.fates.length,migrated:P.origin!==P.c};
+    assets:Math.max(0,assets()),helped:P.helpedNow,motto:P.motto,code:P.code,choices:P.choices.length,fates:P.fates.length,migrated:P.origin!==P.c};
 }
 function kidInheritance(k){
   const base=k.incPct>0?k.incPct:P.wealth0;
@@ -1217,15 +1261,18 @@ function nextGenHtml(){
   P.kids.forEach(k=>{if(!k.inh)k.inh=kidInheritance(k);});
   return `<div class="card" style="margin-top:12px"><h3>🌱 次の世代へ ── 子どもとして人生を続ける</h3>
     <p style="margin:0;font-size:14px">あなたの選択が、子どもの「生まれ」になります。誰の人生を生きますか？</p>
+    <div class="mottos"><b>📜 子どもに残す家訓</b> <small>（1つ選べます。次の世代に小さな効果があります）</small>
+      <div class="opts">${Object.entries(MOTTOS).map(([k,m])=>`<label><span><input type="radio" name="motto" value="${k}" ${P.motto===k?'checked':''}>${m.icon} ${m.label}</span><small>${m.desc}</small></label>`).join('')}
+      <label><span><input type="radio" name="motto" value="" ${P.motto?'':'checked'}>残さない</span></label></div></div>
     <div class="kidpick">${P.kids.map((k,i)=>`<button data-k="${i}"><span class="ji">${k.sex==='male'?'👦':'👧'}</span><b>${k.name}</b>
       <small>${P.birthYear+k.bornAt}年 ${k.c.name}生まれ<br>家の暮らし向き：${WEALTH_LABEL[Math.min(4,Math.floor(k.inh.wealthP*5))]}<br>
       受け継ぐもの：${yen(k.inh.legacy)}${k.inh.eduBonus?`<br>学校に通いやすい（親の学び）`:''}</small></button>`).join('')}</div></div>`;
 }
-let lineageDone=false;
 function continueAs(i){
   const k=P.kids[i],inh=k.inh;
   begin(k.name,{c:k.c,sex:k.sex,wealthP:inh.wealthP,year:P.birthYear+k.bornAt,gen:P.gen+1,lineage:P.lineage,eduBonus:inh.eduBonus,
-    legacy:inh.legacy,parentDeathAge:P.age-k.bornAt,parentName:P.name,bond:P.bond+((EDU_POLICY[P.eduPolicy]||{}).bond||0),helpedCount:P.helpedCount,helpedYears:P.helpedYears});
+    legacy:inh.legacy,parentDeathAge:P.age-k.bornAt,parentName:P.name,firstGenCode:P.firstGenCode,
+    motto:(document.querySelector('input[name=motto]:checked')||{}).value||null,mottoFrom:null,bond:P.bond+((EDU_POLICY[P.eduPolicy]||{}).bond||0),helpedCount:P.helpedCount,helpedYears:P.helpedYears});
 }
 function showFamily(){
   const L=P.lineage,first=L[0],last=L[L.length-1];
@@ -1241,13 +1288,13 @@ function showFamily(){
       <div class="fact"><span>支援で延びたかもしれない寿命</span><b>約${P.helpedYears}年</b></div>
     </div>
     <div class="gens">${L.map(l=>`<div class="card genc"><div class="h"><b>第${l.gen}世代　${l.name}</b><span>${l.birthYear}年 ${l.origin}生まれ${l.migrated?` → ${l.died}`:''}・${l.sex==='male'?'男':'女'}</span></div>
-      <div style="font-size:14px">生まれた家「${l.wealth}」／ ${l.edu} ／ ${l.job||'—'} ／ 子ども${l.children}人 ／ ${l.age}歳・${l.cause}<br>
+      <div style="font-size:14px">${l.motto?`家訓「${MOTTOS[l.motto].icon}${MOTTOS[l.motto].label}」／ `:''}生まれた家「${l.wealth}」／ ${l.edu} ／ ${l.job||'—'} ／ 子ども${l.children}人 ／ ${l.age}歳・${l.cause}<br>
       <small>自分で選んだこと ${l.choices}個 ・ 運命 ${l.fates}個 ・ 遺したもの ${yen(l.assets)}${l.helped?` ・ 支援で延びた寿命 約${l.helped}年`:''}</small></div></div>`).join('')}</div>
     <div class="card" style="margin-top:12px"><div class="q" style="margin:0">💭 ${first.name}さんは自分の生まれを選べませんでした。けれど、その選択は${L.length>1?`${L.length-1}世代あとの${last.name}さんの生まれを形づくりました`:'次の世代の生まれを形づくるはずでした'}。<br>あなたの今日の選択は、誰の「生まれ」になるでしょう？</div></div>
     <div class="end-actions"><button class="btn" id="again2">新しい家系で生まれる</button><button class="btn ghost" id="totitle2">タイトルへ</button></div>`;
   window.scrollTo(0,0);
   $('#again2').onclick=()=>begin($('#name').value.trim()||'名無し');
-  $('#totitle2').onclick=()=>{$('#end-screen').hidden=true;$('#title-screen').hidden=false;showPast();};
+  $('#totitle2').onclick=()=>{$('#end-screen').hidden=true;$('#title-screen').hidden=false;showPast();showResume();};
 }
 
 function showEnd(){
@@ -1257,7 +1304,7 @@ function showEnd(){
   const avgH=P.years.reduce((a,y)=>a+y.happy,0)/P.years.length;
   let mh='';const cells=Math.max(100,Math.ceil((P.age+1)/20)*20);
   for(let i=0;i<cells;i++){const y=P.years.find(v=>v.age===i);mh+=`<div title="${i}歳" style="background:${y?(y.end?'#999':hueOf(y.happy)):'#efe8da'}">${y&&y.icon?y.icon:''}</div>`;}
-  const text=`Life Relay ─ 生命の巡り ─ で、${o.name}に${sexWord(P.sex,0)}として生まれ、${P.age}歳まで生きました。自分で選んだこと${P.choices.length}個、運命で決まったこと${P.fates.length}個。`;
+  const text=`Life Relay ─ 生命の巡り ─ で、${o.name}に${sexWord(P.sex,0)}として生まれ、${P.age}歳まで生きました。自分で選んだこと${P.choices.length}個、運命で決まったこと${P.fates.length}個。${P.code?`同じ生まれのコード：${showCode(P.code)}`:''}`;
   $('#end-screen').innerHTML=`
     <div class="card epitaph"><div class="icon">🌷</div><h1>${P.name}</h1>
       <p>${P.birthYear}年 ${o.name}生まれ — ${P.birthYear+P.age}年 ${c!==o?c.name+'にて':''}没<br>享年 <b>${P.age}歳</b>・${P.cause}</p></div>
@@ -1279,6 +1326,8 @@ function showEnd(){
     <div class="card" style="margin-top:12px"><h3>同じ瞬間に生まれた4人のその後</h3>
       <ul style="padding-left:18px;margin:0">${others.map(x=>`<li>${x.name}（${x.c.name}・${x.sex==='male'?'男':'女'}）— ${x.death===0?'1歳を迎える前に亡くなりました':`${x.death}歳まで生きました`}</li>`).join('')}</ul></div>
     <div class="card" style="margin-top:12px"><div class="q" style="margin:0">💭 あなたが選んだことのうち、生まれた場所が違っても選べたものはいくつあったでしょう？<br>世界では毎年およそ1億3000万人の赤ちゃんが生まれ、その誰もが生まれる場所を選べません。</div></div>
+    ${P.code?`<div class="card" style="margin-top:12px"><h3>🔑 同じ生まれで勝負</h3><div class="codebox">生まれのコード <b>${showCode(P.code)}</b><button class="btn ghost" id="copycode">コードをコピー</button></div>
+      <small>友だちがタイトル画面でこのコードを入れると、あなたと同じ国・同じ家・同じ4人から人生が始まります。選択しだいでどこまで違う人生になるか、比べてみましょう。</small></div>`:''}
     ${nextGenHtml()}
     <div class="end-actions">${P.lineage.length?'<button class="btn ghost" id="family">家系の記録を見る</button>':''}<button class="btn ghost" id="again">新しい家系で生まれる</button><button class="btn ghost" id="copy">結果をコピー</button><button class="btn ghost" id="totitle">タイトルへ</button></div>`;
   saveLife();
@@ -1286,37 +1335,76 @@ function showEnd(){
   $('#end-screen').querySelectorAll('.kidpick button').forEach(b=>b.onclick=()=>continueAs(+b.dataset.k));
   if($('#family'))$('#family').onclick=showFamily;
   $('#again').onclick=()=>begin($('#name').value.trim()||'名無し');
-  $('#totitle').onclick=()=>{$('#end-screen').hidden=true;$('#title-screen').hidden=false;showPast();};
+  $('#totitle').onclick=()=>{$('#end-screen').hidden=true;$('#title-screen').hidden=false;showPast();showResume();};
+  if($('#copycode'))$('#copycode').onclick=()=>{navigator.clipboard?.writeText(`Life Relay ─ 生命の巡り ─ の生まれのコード：${showCode(P.code)}　同じ生まれから人生を始めて、比べてみませんか？`).then(()=>{$('#copycode').textContent='コピーしました';});};
   $('#copy').onclick=()=>{navigator.clipboard?.writeText(text).then(()=>{$('#copy').textContent='コピーしました';});};
 }
 const KEY='inochikuji_lives';
 function loadLives(){try{return JSON.parse(localStorage.getItem(KEY)||'[]');}catch(e){return[];}}
 function saveLife(){
   const arr=loadLives();
-  arr.unshift({name:P.name,country:P.origin.name,sex:P.sex,age:P.age,cause:P.cause,job:P.job,ch:P.choices.length,date:new Date().toLocaleDateString('ja-JP')});
+  arr.unshift({name:P.name,country:P.origin.name,sex:P.sex,age:P.age,cause:P.cause,job:P.job,ch:P.choices.length,code:P.code,date:new Date().toLocaleDateString('ja-JP')});
   try{localStorage.setItem(KEY,JSON.stringify(arr.slice(0,10)));}catch(e){}
 }
 function showPast(){
   const arr=loadLives();$('#past').hidden=!arr.length;
-  $('#past-list').innerHTML=arr.map(l=>`<li>${l.date}　<b>${l.name}</b>：${l.country}の${l.sex==='male'?'男の子':'女の子'}として生まれ、${l.age}歳まで（${l.cause}）${l.job?'・'+l.job:''}</li>`).join('');
+  $('#past-list').innerHTML=arr.map(l=>`<li>${l.date}　<b>${l.name}</b>：${l.country}の${l.sex==='male'?'男の子':'女の子'}として生まれ、${l.age}歳まで（${l.cause}）${l.job?'・'+l.job:''}${l.code?` <small>［${showCode(l.code)}］</small>`:''}</li>`).join('');
 }
 
 /* ============================================================
    開始
    ============================================================ */
-function begin(name,inh=null){
+/* ============================================================
+   途中セーブと再開（ブラウザに自動で保存）
+   ============================================================ */
+const SAVE_KEY='liferelay_save';
+const isCountry=v=>v&&typeof v==='object'&&typeof v.births==='number'&&typeof v.id==='string';
+function saveGame(){
+  if(!P||!P.alive||modalOpen||modalQueue.length||$('#game').hidden)return;
+  try{
+    const data={v:1,savedAt:Date.now(),P:{...P,survQ:undefined},others:others.map(o=>({...o,q:undefined})),market:G.market,settings};
+    localStorage.setItem(SAVE_KEY,JSON.stringify(data,(k,v)=>isCountry(v)?{__c:v.id}:v));
+  }catch(e){}
+}
+function loadSave(){try{const t=localStorage.getItem(SAVE_KEY);return t?JSON.parse(t,(k,v)=>v&&typeof v==='object'&&v.__c?COUNTRIES.find(c=>c.id===v.__c):v):null;}catch(e){return null;}}
+function clearSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
+function showResume(){
+  const d=loadSave();$('#resume').hidden=!d;
+  if(d)$('#resume-info').innerHTML=`<b>${d.P.name}</b>（第${d.P.gen}世代・${d.P.age}歳・${REGION_ICON(d.P.c.region)} ${d.P.c.name}）<br><small>${new Date(d.savedAt).toLocaleString('ja-JP')} に自動保存</small>`;
+}
+function resumeGame(){
+  const d=loadSave();if(!d)return;
+  P=d.P;others=d.others.map(o=>({...o,q:buildQx(o.c,o.sex)}));G.market=d.market;Object.assign(settings,d.settings);
+  modalQueue=[];modalOpen=false;skipping=false;
+  $('#log').innerHTML='';P.log.forEach(logLi);
+  $('#title-screen').hidden=true;$('#end-screen').hidden=true;$('#game').hidden=false;
+  // 再開直後は一時停止にしておく
+  speed=0;document.querySelectorAll('#speed button[data-s]').forEach(x=>x.classList.toggle('on',x.dataset.s==='0'));
+  setTab('life');render();startLoop();
+}
+setInterval(saveGame,3000);
+addEventListener('pagehide',saveGame);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)saveGame();});
+$('#resume-btn').onclick=resumeGame;
+
+function begin(name,inh=null,code=null){
   settings.mode=document.querySelector('input[name=mode]:checked').value;
   settings.yearMs=40000; // 1×で1年＝約40秒、2×で約20秒
   settings.gentle=$('#gentle').checked;
   modalQueue=[];modalOpen=false;skipping=false;
-  newLife(name,inh);
+  newLife(name,inh,code);
+  speed=1;document.querySelectorAll('#speed button[data-s]').forEach(x=>x.classList.toggle('on',x.dataset.s==='1'));
   $('#log').innerHTML='';
   $('#title-screen').hidden=true;$('#end-screen').hidden=true;$('#game').hidden=false;
   setTab('life');render();birthReveal();
 }
-$('#start').onclick=()=>begin(($('#name').value||'').trim()||'名無し');
+$('#start').onclick=()=>{
+  const raw=$('#code').value.trim(),code=normCode(raw);
+  if(raw&&!code){$('#code-note').innerHTML='<span style="color:var(--bad)">コードの形が正しくありません（例：B-7KQ2M）。空欄にすると新しい生まれになります。</span>';$('#code').focus();return;}
+  begin(($('#name').value||'').trim()||'名無し',null,code);
+};
 $('#name').addEventListener('keydown',e=>{if(e.key==='Enter')$('#start').click();});
-showPast();
+showPast();showResume();
 </script>
 </body>
 </html>
