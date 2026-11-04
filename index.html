@@ -153,6 +153,7 @@
   .cards button:hover{border-color:var(--choice)}
   .cards .ji{font-size:32px;display:block}
   .cards small{display:block}
+  .cards .aptx{color:var(--accent2);font-weight:600;margin-top:3px}
   .roulette{font-size:28px;font-weight:700;text-align:center;padding:18px 0;min-height:80px}
   .q{background:#f3ecdf;border-radius:12px;padding:10px 14px;margin-top:10px;font-size:14px}
 
@@ -1270,12 +1271,35 @@ function leaveSchool(){P.inSchool=false;P.school=null;}
 function recalcIncome(){P.income=incomeAt(P.c,P.incomePct)*(.8+.1*P.eduLevel)*(P.jobMult||1)*(P.childWorker?.3:1);}
 function startWork(child=false){ // 選択肢なしの就職（子どもの労働・夜間学校など）
   const t=child?0:[0,1,1,2,3,3][P.eduLevel];
-  const [n,i]=pick(JOBS[Math.min(t,2)]);
+  let [n,i]=pick(JOBS[Math.min(t,2)]),apt=null;
+  if(!child){const ap=aptitudeOffers(Math.min(t,2));if(ap.length&&chance(.5)){n=ap[0].n;i=ap[0].i;apt=ap[0].apt;}}
   P.job=n;P.jobIcon=i;P.jobMult=1;P.childWorker=child;P.workYears=0;
   P.incomePct=clamp(.3*P.wealthP+.3*(P.know/100)+.1*P.eduLevel/4+.3*Math.random(),.01,.99);recalcIncome();
   if(!P.inSchool)P.focus='work';
-  log(`${child?'子どもながら、':''}${n}として働き始めました（年収 ${yen(P.income*100)}）`,'info',i,!child,child?'f':null);
+  log(`${child?'子どもながら、':''}${apt?`得意な${APT[apt.g].name}を生かして、`:''}${n}として働き始めました（年収 ${yen(P.income*100)}）`,'info',i,!child,child?'f':null);
 }
+// 得意なゲージを生かせる職業 [必要な学歴の層(1=小中卒〜, 2=高卒〜, 3=大卒〜), 職業名, アイコン]
+const APT={
+  sport:{name:'運動',icon:'🏃',jobs:[[1,'配達員','🚲'],[1,'建設の仕事','🏗'],[2,'警察官','👮'],[2,'消防士','🚒'],[2,'自衛官・軍人','🎖'],[2,'スポーツインストラクター','🏋️'],[3,'スポーツトレーナー','💪'],[3,'体育の先生','🤸']]},
+  bond:{name:'絆',icon:'🤝',jobs:[[1,'市場の売り子','🛒'],[2,'介護の仕事','🤲'],[2,'ホテルの受付','🛎'],[2,'保育の補助','🧸'],[3,'営業','🤝'],[3,'人事の仕事','👥'],[3,'社会福祉士','💗']]},
+  know:{name:'知識',icon:'📘',jobs:[[1,'帳簿づけの仕事','🧾'],[2,'事務員','🗂'],[2,'図書館の職員','📚'],[3,'研究所の職員','🔬'],[3,'システムエンジニア','🖥'],[3,'編集者','📖']]},
+  sense:{name:'感性',icon:'🎨',jobs:[[1,'屋台の料理人','🍢'],[2,'美容師','✂️'],[2,'パン職人','🥖'],[2,'料理人','🍳'],[3,'デザイナー','🎨'],[3,'映像クリエイター','🎬'],[3,'建築デザイナー','🏛']]},
+};
+// ゲージが60以上なら、そのゲージを生かせる職業カードが出やすい（高いほど確実に出る。最大2枚）
+function aptitudeOffers(t){
+  const res=[];
+  const gs=Object.keys(APT).map(g=>[g,P[g]]).filter(([,v])=>v>=60).sort((a,b)=>b[1]-a[1]).slice(0,2);
+  for(const [g,v] of gs){
+    if(!chance(clamp((v-50)/30,.3,1)))continue;
+    const pool=APT[g].jobs.filter(j=>j[0]<=Math.max(1,t));if(!pool.length)continue;
+    const top=Math.max(...pool.map(j=>j[0])),[tier,n,i]=pick(pool.filter(j=>j[0]===top));
+    // 得意を生かせる仕事は、少し良い条件で迎えられる
+    const pct=clamp(.3*P.wealthP+.3*(P.know/100)+.1*P.eduLevel/4+.3*Math.random()+.06,.01,.99);
+    res.push({n,i,pct,mult:1+tier*.05,apt:{g,v:Math.round(v)}});
+  }
+  return res;
+}
+const aptNote=o=>o.apt?`<small class="aptx">✨ ${APT[o.apt.g].icon}${APT[o.apt.g].name} ${o.apt.v} を生かせる</small>`:'';
 function makeOffer(tierOrField){
   const pct=clamp(.3*P.wealthP+.3*(P.know/100)+.1*P.eduLevel/4+.3*Math.random(),.01,.99);
   if(typeof tierOrField==='string'){const [n,i,k]=pick(FIELDS[tierOrField].jobs);return{n,i,pct:clamp(pct*.5+k*.6,.05,.99),mult:1.15};}
@@ -1284,7 +1308,8 @@ function makeOffer(tierOrField){
 function jobOffer(title,intro,current=false){
   const t=[0,1,1,2,3,3][P.eduLevel];
   const offers=P.eduLevel>=4&&P.field?[makeOffer(P.field),makeOffer(P.field),makeOffer(3)]:[makeOffer(t),makeOffer(t),makeOffer(Math.max(0,t-1))];
-  if(P.sense>=65&&P.eduLevel>=2&&chance(.6))offers.push(makeOffer('art')); // 感性が高いと芸術系の仕事カードも
+  for(const o of aptitudeOffers(t))if(!offers.some(x=>x.n===o.n))offers.push(o);
+  if(P.sense>=70&&P.eduLevel>=4&&chance(.5)){const o=makeOffer('art');o.apt={g:'sense',v:Math.round(P.sense)};if(!offers.some(x=>x.n===o.n))offers.push(o);}
   if(P.eduLevel===5)offers.forEach(o=>o.pct=Math.min(.99,o.pct+.1));
   offers.forEach(o=>o.inc=incomeAt(P.c,o.pct)*(.8+.1*P.eduLevel)*o.mult);
   const choices=[];
@@ -1295,9 +1320,10 @@ function jobOffer(title,intro,current=false){
       moveTo(d,'留学経験を生かして');P.job=o.n;P.jobIcon=o.i;P.incomePct=o.pct;P.jobMult=o.mult;P.childWorker=false;P.workYears=current?P.workYears:0;recalcIncome();P.unemployed=0;P.focus='work';
       log(`${d.name}で${o.n}として働き始めました（年収 ${yen(P.income*100)}）`,'info',o.i,true,'c');}});
   }
-  choices.unshift(...offers.map(o=>({auto:o.inc,html:`<span class="ji">${o.i}</span><b>${o.n}</b><small>年収 ${yen(o.inc*100)}</small>`,fn:()=>{
+  choices.unshift(...offers.map(o=>({auto:o.inc*(o.apt?1.15:1),html:`<span class="ji">${o.i}</span><b>${o.n}</b><small>年収 ${yen(o.inc*100)}</small>${aptNote(o)}`,fn:()=>{
     P.job=o.n;P.jobIcon=o.i;P.incomePct=o.pct;P.jobMult=o.mult;P.childWorker=false;P.workYears=current?P.workYears:0;recalcIncome();P.unemployed=0;P.focus='work';
-    log(`${o.n}として${current?'新しく':''}働き始めました（年収 ${yen(P.income*100)}）`,'info',o.i,true,'c');}})));
+    if(o.apt)P.happy+=3; // 得意を生かせる仕事はやりがいがある
+    log(`${o.apt?`得意な${APT[o.apt.g].name}を生かして、`:''}${o.n}として${current?'新しく':''}働き始めました（年収 ${yen(P.income*100)}）`,'info',o.i,true,'c');}})));
   if(current)choices.push({auto:P.income*1.05,html:`<span class="ji">${P.jobIcon}</span><b>いまの仕事を続ける</b><small>年収 ${yen(P.income*100)}</small>`,fn:()=>log('いまの仕事を続けることにしました','info',null,false,'c')});
   ask(title,`${intro}<br>どの仕事を選びますか？`,choices,{cards:true});
 }
