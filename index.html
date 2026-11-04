@@ -157,7 +157,7 @@
     .speed{order:3;width:100%;flex-wrap:nowrap;overflow-x:auto;gap:5px;-webkit-overflow-scrolling:touch}
     .speed button{flex:none;min-height:38px;padding:4px 11px;font-size:14px}
     .speed button small{display:none}
-    .mstat{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:8px;align-items:center;padding:6px 10px;background:var(--card);border-bottom:1px solid var(--line);order:4;width:calc(100% + 20px);margin:0 -10px -6px;font-size:11px;border-top:1px solid var(--line)}
+    .mstat{display:grid;grid-template-columns:repeat(5,1fr) auto;gap:6px;align-items:center;padding:6px 10px;background:var(--card);border-bottom:1px solid var(--line);order:4;width:calc(100% + 20px);margin:0 -10px -6px;font-size:11px;border-top:1px solid var(--line)}
     .mstat .bar{height:6px}
     .mstat .mm{font-weight:700;font-size:12.5px;white-space:nowrap}
     .mnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:15;background:rgba(255,253,248,.98);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
@@ -406,9 +406,9 @@ const EDU_LABEL=['学校に通えなかった','小学校卒','中学校卒','�
 const SCHOOL_LABEL={primary:'小学生',middle:'中学生',high:'高校生',night:'夜間学校に通学中',uni:'大学生',ronin:'浪人中（受験勉強）',grad:'大学院生'};
 const FOCUS={
   study:{label:'学ぶ',icon:'📚',desc:'知識↑'},
-  play:{label:'遊ぶ・部活',icon:'⚽',desc:'絆・幸福↑ 部活が上達'},
+  play:{label:'遊ぶ・部活',icon:'⚽',desc:'絆・幸福・運動↑'},
   help:{label:'家の手伝い',icon:'🧺',desc:'家計を助ける'},
-  health:{label:'体を大事に',icon:'🏃',desc:'健康↑'},
+  health:{label:'体を動かす',icon:'🏃',desc:'健康・運動↑'},
   work:{label:'仕事に打ち込む',icon:'💼',desc:'収入↑ 疲れる'},
   people:{label:'大切な人と',icon:'🤝',desc:'絆・幸福↑'},
   rest:{label:'のんびり',icon:'☕',desc:'幸福回復'},
@@ -442,7 +442,7 @@ const FIELDS={
 const MOTTOS={
   learn:{label:'学びを大切に',icon:'📚',desc:'知識と学校の通いやすさが少し上がる',start:p=>{p.know+=6;p.eduBonus=Math.min(.4,p.eduBonus+.05);}},
   help:{label:'人を助けよ',icon:'🤲',desc:'4人への支援が安くなり、支えるほど心が満たされる',start:p=>{p.bond+=4;}},
-  health:{label:'健康第一',icon:'🏃',desc:'健康が高く生まれ、「体を大事に」の効果が上がる',start:p=>{p.health+=6;}},
+  health:{label:'健康第一',icon:'🏃',desc:'健康が高く生まれ、「体を動かす」の効果が上がる',start:p=>{p.health+=6;}},
   family:{label:'家族を大切に',icon:'🏡',desc:'絆が高く生まれ、出会いが増える',start:p=>{p.bond+=8;}},
   challenge:{label:'挑戦を恐れるな',icon:'🚀',desc:'商売や海外移住が成功しやすい',start:p=>{}},
   thrift:{label:'倹約は力なり',icon:'🪙',desc:'節約しても幸福が下がりにくく、貯金がたまりやすい',start:p=>{}},
@@ -478,6 +478,7 @@ function newLife(name,inh=null,code=null){
   try{ newLifeCore(name,inh);
     // ここまでと同じ乱数の流れで、才能ときょうだいも決める（生まれのコードで再現できる）
     P.talent=Math.random();P.sibs=inh?(inh.sibs||[]):genSibs();
+    P.sport=clamp(6+P.talent*12+(P.health-60)*.25);
   } finally { Math.random=real; }
   P.dream=null;P.dreamDone=null;P.club=null;P.pro=null;P.trips=0;P.everBiz=false;P.eraSeen=[];
   P.era=inh?inh.era:makeEra(code);P.gratitude=inh?(inh.gratitude||[]):[];
@@ -655,10 +656,10 @@ function yearStep(){
   if(MILESTONES[P.age])milestone();
   openNextModal();
 }
-function clampAll(){for(const k of['health','happy','know','bond'])P[k]=clamp(P[k]);P.wealthP=clamp(P.wealthP,.01,.99);P.debt=Math.max(0,P.debt);}
+function clampAll(){for(const k of['health','happy','know','bond','sport'])P[k]=clamp(P[k]);P.wealthP=clamp(P.wealthP,.01,.99);P.debt=Math.max(0,P.debt);}
 function applyFocus(){
   const f=P.focus,c=P.c;
-  if(P.age<6){P.bond+=1;P.know+=1.5*(.6+c.edu*.4);}
+  if(P.age<6){P.bond+=1;P.know+=1.5*(.6+c.edu*.4);P.sport+=1.5;}
   else{
     if(P.inSchool)P.know+=(P.school==='night'?2:3.2)*(.4+c.edu*.6);else if(P.age<25)P.know+=.5;
     switch(f){
@@ -668,12 +669,22 @@ function applyFocus(){
       case'health':P.health+=P.motto==='health'?3.5:2.5;break;
       case'work':P.health-=1;P.bond-=1;break;
       case'people':P.bond+=3;P.happy+=2;break;
-      case'rest':P.happy+=3;P.health+=.5;break;
+      case'rest':P.happy+=3;P.health+=.5;P.sport-=.5;break;
     }
   }
   if(P.age>=15){ if(P.spend==='save')P.happy-=P.motto==='thrift'?.5:2; if(P.spend==='rich'){P.happy+=2.5;P.health+=.8;} }
   P.flags.workStreak=f==='work'?P.flags.workStreak+1:0;
-  P.health+=(healthNorm(P.age)-P.health)*.08;
+  // 運動
+  if(P.age>=6){
+    if(f==='play')P.sport+=P.age<25?3:1.5;
+    if(f==='health')P.sport+=3;
+    if(f==='work'&&P.job&&JOBS[0].concat(JOBS[1]).some(j=>j[0]===P.job))P.sport+=.5; // 体を使う仕事
+    if(P.club&&P.club.active&&CLUBS[P.club.key].type==='sport')P.sport+=2.5;
+    if(P.age<18)P.sport+=.8; // 成長期
+  }
+  if(P.age>30)P.sport-=.8;if(P.age>50)P.sport-=.8;if(P.age>70)P.sport-=.8;
+  // よく体を動かしている人は、健康を保ちやすい
+  P.health+=(healthNorm(P.age)+(P.sport-40)*.06-P.health)*.08;
   if(livingIncome()<1500)P.health-=eraActive('energy')?.8:1.5;
   if(P.age>65)P.know-=.3;
   P.bond+=(55-P.bond)*.03+(P.married?1:0)+(P.children?.5:0)-(P.age>75?.6:0);
@@ -773,7 +784,7 @@ function clubTick(){
   const cl=P.club;if(!cl||!cl.active)return;
   const C2=CLUBS[cl.key];
   if(P.age>22||(P.job&&!P.childWorker&&P.school!=='night'&&!activePro())){cl.active=false;if(cl.skill>=60)log(`${C2.label}は趣味として続けることにしました`,'info',C2.icon);return;}
-  cl.skill=clamp(cl.skill+3+P.talent*7+(P.focus==='play'?3:0)+(P.focus==='health'&&C2.type==='sport'?2:0)+rnd(-1,2));
+  cl.skill=clamp(cl.skill+(C2.type==='sport'?2+P.talent*5+P.sport/25:3+P.talent*7)+(P.focus==='play'?3:0)+(P.focus==='health'&&C2.type==='sport'?1:0)+rnd(-1,2));
   if(P.age>=12&&P.age<=21&&chance(.45)){
     const s=cl.skill,name=C2.type==='sport'?'大会':'コンクール';
     if(s>=85){P.happy+=8;log(`${C2.label}の全国${name}で優勝し、代表に選ばれました！`,'good','🏆',true);}
@@ -783,7 +794,7 @@ function clubTick(){
   }
   // スカウト
   if(P.age>=16&&P.age<=22&&cl.skill>=72&&!P.flags.scoutAsked){
-    const p=popularity(cl.key,P.c)*(cl.skill-68)/32*(P.c.gdp<5?.6:1);
+    const p=popularity(cl.key,P.c)*(cl.skill-68)/32*(P.c.gdp<5?.6:1)*(C2.type==='sport'?clamp(.4+P.sport/100,.4,1.4):1);
     if(chance(p)){
       P.flags.scoutAsked=true;
       const inc=incomeAt(P.c,clamp(.95+.045*(cl.skill-72)/28,.9,.995))*(1.2+(cl.skill-72)/12);
@@ -803,7 +814,8 @@ function proYear(){ // プロの1年（economy から呼ぶ）
   const pr=P.pro,cl=P.club,C2=CLUBS[pr.club];pr.years++;
   const youth=C2.type==='sport'?(P.age<=27?rnd(0,3):P.age>=31?-rnd(1,4):rnd(-1,1)):rnd(-.5,1.5);
   cl.skill=clamp(cl.skill+youth+(P.focus==='work'?1:0));
-  const perf=cl.skill/100+rnd(-.3,.3);let mult=1;
+  if(C2.type==='sport'&&P.sport<45&&P.age>=28)cl.skill-=1.5;
+    const perf=cl.skill/100+rnd(-.3,.3);let mult=1;
   if(perf>1.02){mult=1.7;P.happy+=8;pr.best++;log(C2.type==='sport'?`シーズンMVP級の大活躍！（${C2.pro}）`:`作品が大ヒットしました！`,'good','🌟',true);}
   else if(perf<.55){mult=.7;P.happy-=4;log(C2.type==='sport'?'不調のシーズンでした':'思うように作品が売れない一年でした','bad','🌧');}
   P.income=pr.base*mult*(P.flags.eraIncome||1);
@@ -1322,7 +1334,7 @@ function doAction(id){
    ============================================================ */
 function milestone(){
   const alive=others.filter(o=>o.death>=P.age).length,sv=survival(buildQx(P.origin,P.sex),P.age)*100;
-  ask(`🌿 ${P.age}歳の節目`,`<div class="q">健康 ${Math.round(P.health)} ／ 幸福 ${Math.round(P.happy)} ／ 知識 ${Math.round(P.know)} ／ 絆 ${Math.round(P.bond)}<br>
+  ask(`🌿 ${P.age}歳の節目`,`<div class="q">健康 ${Math.round(P.health)} ／ 幸福 ${Math.round(P.happy)} ／ 知識 ${Math.round(P.know)} ／ 運動 ${Math.round(P.sport)} ／ 絆 ${Math.round(P.bond)}<br>
     暮らしの水準：世界の中で <b>下から${Math.round(worldPct(livingIncome()))}%</b><br>
     ${P.origin.name}で同じ年に生まれた人のうち、いま生きているのは約${sv.toFixed(0)}%</div>
     <p>同じ瞬間に生まれた4人のうち、いまも生きているのは <b>${alive}人</b> です。<br>これまでに自分で選んだこと：<b>${P.choices.length}</b>個 ／ 運命で決まったこと：<b>${P.fates.length}</b>個</p>
@@ -1392,7 +1404,7 @@ function render(){
   $('#profile').innerHTML=`
     <div class="who"><div class="avatar">${avatar()}</div><div><div class="nm">${P.name}<span class="genbadge">第${P.gen}世代</span></div>
       <small>${REGION_ICON(c.region)} ${c.name}${P.origin!==c?`（${P.origin.name}生まれ）`:''}・${sexWord(P.sex,P.age)}</small></div></div>
-    ${bar('health','❤️ 健康','#d9534f')}${bar('happy','☀️ 幸福','#f0ad4e')}${bar('know','📘 知識','#3b7dd8')}${bar('bond','🤝 絆','#5cb85c')}
+    ${bar('health','❤️ 健康','#d9534f')}${bar('happy','☀️ 幸福','#f0ad4e')}${bar('know','📘 知識','#3b7dd8')}${bar('sport','🏃 運動','#8e5cc8')}${bar('bond','🤝 絆','#5cb85c')}
     <dl class="kv">
       <dt>生まれた家</dt><dd>${WEALTH_LABEL[w]}</dd>
       <dt>学び</dt><dd>${status}${P.field&&P.eduLevel>=4?`（${FIELDS[P.field].label}）`:''}</dd>
@@ -1434,7 +1446,7 @@ function render(){
   $('#era').innerHTML=(P.eraSeen||[]).length?P.eraSeen.slice(-8).reverse().map(e=>`<li><b>${e.year}年</b> ${e.icon} ${e.text}</li>`).join(''):'<li><small>まだ大きな出来事は起きていません</small></li>';
   // スマホ用のステータス帯
   const mb=(v,col,ic)=>`<div>${ic} ${Math.round(v)}<div class="bar"><i style="width:${v}%;background:${col}"></i></div></div>`;
-  $('#mstat').innerHTML=mb(P.health,'#d9534f','❤️')+mb(P.happy,'#f0ad4e','☀️')+mb(P.know,'#3b7dd8','📘')+mb(P.bond,'#5cb85c','🤝')+`<div class="mm">💰${yen(P.savings)}</div>`;
+  $('#mstat').innerHTML=mb(P.health,'#d9534f','❤️')+mb(P.happy,'#f0ad4e','☀️')+mb(P.know,'#3b7dd8','📘')+mb(P.sport,'#8e5cc8','🏃')+mb(P.bond,'#5cb85c','🤝')+`<div class="mm">💰${yen(P.savings)}</div>`;
   // 4人
   $('#others').innerHTML=others.map((o,i)=>{const gone=o.death<P.age,n=otherNews(o);
     const canHelp=!gone&&P.alive&&P.age>=15&&!P.actUsed;
@@ -1628,7 +1640,7 @@ function showResume(){
 }
 function resumeGame(){
   const d=loadSave();if(!d)return;
-  P=d.P;others=d.others.map(o=>({...o,q:buildQx(o.c,o.sex)}));G.market=d.market;Object.assign(settings,d.settings);
+  P=d.P;if(typeof P.sport!=='number')P.sport=30;others=d.others.map(o=>({...o,q:buildQx(o.c,o.sex)}));G.market=d.market;Object.assign(settings,d.settings);
   modalQueue=[];modalOpen=false;skipping=false;
   $('#log').innerHTML='';P.log.forEach(logLi);
   $('#title-screen').hidden=true;$('#end-screen').hidden=true;$('#game').hidden=false;
