@@ -756,7 +756,7 @@ function calcOdds(base,factors){
     if(f.g){const v=Math.round(P[f.g]),d=(P[f.g]-50)/50*f.w;rows.push({icon:GAUGE[f.g].icon,label:`${GAUGE[f.g].name} ${v}`,d});}
     else if('d' in f)rows.push({icon:f.icon||'・',label:f.label,d:f.d});
   }
-  return {p:clamp(rows.reduce((a,r)=>a+r.d,0),.03,.97),rows};
+  return {p:clamp(rows.reduce((a,r)=>a+r.d,0),.03,.92),rows};
 }
 const pct=d=>`${d>=0?'+':''}${Math.round(d*100)}%`;
 function oddsTable(o){
@@ -872,7 +872,7 @@ function electionTick(){
 }
 
 /* ---------- 出馬・政治家 ---------- */
-const OFFICES=[{name:'地域の議員',icon:'🏛',pct:.8,base:.18},{name:'市長',icon:'🏙',pct:.9,base:.08},{name:'国会議員',icon:'🏛️',pct:.96,base:.03}];
+const OFFICES=[{name:'地域の議員',icon:'🏛',pct:.8,base:.08},{name:'市長',icon:'🏙',pct:.9,base:-.02},{name:'国会議員',icon:'🏛️',pct:.96,base:-.1}];
 function fameD(){return (activePro()||P.pro?.12:0)+(P.flags.famous?.08:0);}
 function runForOffice(lv){
   const O=OFFICES[lv],m=M(P.c);
@@ -923,7 +923,7 @@ function officeTick(){
 function termEnd(){
   const o=P.office,O=OFFICES[o.lv];
   const opts=[{label:'再選を目指す',auto:2,fn:()=>{o.term=0;
-      const od=calcOdds(.35,[{icon:'📜',label:'4年間の実績',d:clamp((o.record-8)/25,-.2,.25)},{g:'bond',w:.25},...(fameD()?[{icon:'⭐',label:'知名度',d:fameD()}]:[])]);
+      const od=calcOdds(.25,[{icon:'📜',label:'4年間の実績',d:clamp((o.record-8)/25,-.2,.25)},{g:'bond',w:.25},...(fameD()?[{icon:'⭐',label:'知名度',d:fameD()}]:[])]);
       roulette(`🗳 ${O.name}の再選`,'',od,{win:'🎉 再選！',lose:'😢 落選…'},w=>{if(w){P.happy+=5;log(`${O.name}に再選されました`,'good','🎉',true,'f');}else{log(`${O.name}の再選はなりませんでした`,'bad','😢',true,'f');leaveOffice();}});}}];
   if(o.lv<2)opts.push({label:`${OFFICES[o.lv+1].name}を目指す`,desc:'より大きな舞台へ。落選しても今の職はもう1期続ける',auto:1,fn:()=>{o.term=0;runForOffice(o.lv+1);}});
   opts.push({label:'政治から引退する',auto:P.age>=65?2:.5,fn:()=>{log(`${O.name}を勇退しました`,'info','🌅',true,'c');leaveOffice();}});
@@ -1144,7 +1144,7 @@ function clubTick(){
     if(s>=65&&(P.flags.lastFinal||-9)+2<=P.age){
       P.flags.lastFinal=P.age;const st=C2.type==='sport'?'sport':'sense';
       miniGame('match',P[st],sc=>{
-        const od=calcOdds(.12,[{icon:C2.icon,label:`${C2.label}の腕前 ${Math.round(s)}`,d:(s-65)/35*.4},{g:st,w:.2},{icon:'🎮',label:`決勝の手ごたえ ${feel(sc)}`,d:(sc-1.5)*.12}]);
+        const od=calcOdds(.02,[{icon:C2.icon,label:`${C2.label}の腕前 ${Math.round(s)}`,d:(s-65)/35*.4},{g:st,w:.2},{icon:'🎮',label:`決勝の手ごたえ ${feel(sc)}`,d:(sc-1.5)*.12}]);
         roulette(`🏆 全国${name}の決勝`,'',od,{win:'🏆 優勝！',lose:'🥈 準優勝'},w=>{
           if(w){P.happy+=8;cl.skill=clamp(cl.skill+3);log(`${C2.label}の全国${name}で優勝し、代表に選ばれました！`,'good','🏆',true);}
           else{P.happy+=5;log(`${C2.label}の全国${name}で準優勝しました`,'good','🥈',true);}
@@ -1460,7 +1460,7 @@ function rankBoost(){const st={middle:'mid',high:'high',uni:'uni'}[P.school],r=s
 function prevSchoolD(stage){const prev=stage==='high'?rankOf('mid'):stage==='uni'?rankOf('high'):null;return prev==='nat'?.07:prev==='pri'?.04:prev==='sub'?-.04:0;}
 // 大学の種類が、就職（職業カードの条件）に効く
 const uniJobD=()=>P.eduLevel>=4?({nat:.1,pub:.06,pri:.02}[rankOf('uni')]||0):0;
-const EXAM_BASE={mid:{nat:.12,pri:.38},high:{nat:.12,pub:.42,pri:.52},uni:{nat:.12,pub:.24,pri:.38}};
+const EXAM_BASE={mid:{nat:-.02,pri:.26},high:{nat:-.04,pub:.36,pri:.38},uni:{nat:-.06,pub:.1,pri:.26}};
 function schoolOdds(stage,type,score,extra,sp){
   const fs=[{g:'know',w:.45}],pd=prevSchoolD(stage);
   if(pd)fs.push({icon:'🏫',label:`${stage==='high'?'中学':'高校'}（${rankLabel(stage==='high'?'mid':'high')}）で学んだ`,d:pd});
@@ -1536,7 +1536,7 @@ function askHardship(st){
   const nm=STAGE_NAME[st];
   ask('💸 学費が払えない',`家計が苦しくなり、${nm}の学費や通うためのお金を払い続けるのが難しくなりました。${familyBox()}`,[
     {label:'アルバイトをしながら続ける',desc:'学びの伸びは落ち、体も疲れるが、学校は続けられる',auto:2,fn:()=>{P.flags.workStudy=true;log(`アルバイトをしながら${nm}に通うことにしました`,'info','🧑‍🍳',true,'c');}},
-    {label:'奨学金を申請する',desc:'知識が高いほど通りやすい',auto:1.5,fn:()=>roulette('📨 奨学金の審査','',calcOdds(.2,[{g:'know',w:.4}]),{win:'🎉 奨学金が決まった',lose:'😢 審査に通らなかった'},w=>{
+    {label:'奨学金を申請する',desc:'知識が高いほど通りやすい',auto:1.5,fn:()=>roulette('📨 奨学金の審査','',calcOdds(.12,[{g:'know',w:.4}]),{win:'🎉 奨学金が決まった',lose:'😢 審査に通らなかった'},w=>{
       if(w){P.flags.scholar=st;log('奨学金が決まり、学校を続けられることになりました','good','📨',true,'f');}
       else{log('奨学金の審査に通りませんでした','bad','📨',false,'f');
         ask('💸 どうする？','奨学金は通りませんでした。',[
@@ -1735,12 +1735,12 @@ const EVENTS=[
   {w:()=>.5,fn:p=>{p.savings+=M(p.c)*.2;p.happy+=3;log('くじで少しだけお金が当たりました','good','🍀',false,'f');}},
   {w:p=>p.age>=20&&p.parents>(p.parentDeathAge!==null?1:0)?(p.age/40)*(70/p.c.le):0,fn:p=>{p.parents--;p.happy-=10;p.bond-=3;const inh=M(p.c)*p.wealthP;p.savings+=inh;log(p.parents?'親のひとりが亡くなりました':'もうひとりの親も亡くなりました','big','🕊',true,'f');}},
   {w:p=>p.age>=22&&p.savings>M(p.c)?1:0,fn:p=>ask('💹 もうけ話','知り合いから「必ずもうかる」という話を持ちかけられました。',[
-    {label:'話に乗る',desc:'大きく増えるかもしれないし、失うかもしれない',auto:.7,fn:()=>{const amt=p.savings*.5;roulette('💹 もうけ話の結果','',calcOdds(.3,[{g:'know',w:.15}]),{win:'📈 うまくいった！',lose:'📉 だまされた…'},w=>{if(w){p.savings+=amt*.8;log('もうけ話がうまくいき、お金が増えました','good','📈',false,'c');}else{p.savings-=amt*.8;p.happy-=6;log('もうけ話は詐欺まがいで、お金を失いました','bad','📉',true,'c');}});}},
+    {label:'話に乗る',desc:'大きく増えるかもしれないし、失うかもしれない',auto:.7,fn:()=>{const amt=p.savings*.5;roulette('💹 もうけ話の結果','',calcOdds(.22,[{g:'know',w:.15}]),{win:'📈 うまくいった！',lose:'📉 だまされた…'},w=>{if(w){p.savings+=amt*.8;log('もうけ話がうまくいき、お金が増えました','good','📈',false,'c');}else{p.savings-=amt*.8;p.happy-=6;log('もうけ話は詐欺まがいで、お金を失いました','bad','📉',true,'c');}});}},
     {label:'断る',auto:2,fn:()=>log('うまい話は断りました','info',null,false,'c')}])},
   {w:()=>1,fn:p=>{p.happy+=5;p.sense+=2;log(`新しい趣味を見つけました（${pick(['歌','料理','サッカー','絵を描くこと','楽器','読書','裁縫','ダンス','釣り'])}）`,'good','🎨');}},
   {w:p=>p.age>=35&&!p.illness?p.age/30:0,fn:p=>{
     const ill=pick(p.age>55?['心臓の病気','がん','脳卒中','糖尿病']:['結核','重い肺炎','がん','肝臓の病気']);
-    const cost=M(p.c)*rnd(.6,2),pc=(p.insLife?cost*.2:cost)*(publicCare()?.4:1),od=calcOdds(.3+(p.c.le-55)/40+p.wealthP*.15,[{g:'health',w:.25},...(p.checkup?[{icon:'🩺',label:'健康診断で早く見つかった',d:.15}]:[])]),ok=od.p;
+    const cost=M(p.c)*rnd(.6,2),pc=(p.insLife?cost*.2:cost)*(publicCare()?.4:1),od=calcOdds(.16+(p.c.le-55)/60+p.wealthP*.1,[{g:'health',w:.25},...(p.checkup?[{icon:'🩺',label:'健康診断で早く見つかった',d:.15}]:[])]),ok=od.p;
     log(`${ill}が見つかりました${p.checkup?'（健康診断で早めに見つかりました）':''}`,'bad','🏥',true,'f');p.checkup=false;
     ask('🏥 病気が見つかる',`${ill}が見つかりました。<div class="q">治療費：${yen(pc)}${p.insLife?'（保険適用）':''}${publicCare()?'（公的医療で負担が軽い）':''}<br>治療がうまくいく見込み：およそ${Math.round(ok*100)}%</div>`,[
       {label:'治療を受ける',desc:p.savings<pc?'足りない分は借金になる':'貯金から払う',auto:3,fn:()=>{p.savings-=pc;roulette('💊 治療の結果','',od,{win:'💊 回復に向かいました',lose:'🏥 思わしくありません'},w=>{if(w){p.health-=5;log(`${ill}の治療を受け、回復に向かいました`,'good','💊',true,'c');}else{p.health-=15;p.illness=ill;log(`${ill}の治療を受けましたが、思うように良くなりません`,'bad','🏥',true,'c');}});}},
@@ -1794,7 +1794,7 @@ function actionList(){
   ].filter(x=>x.show);
 }
 function migOdds(){
-  return calcOdds(.42,[{g:'know',w:.2},...(P.abroad?[{icon:'✈️',label:'留学経験',d:.2}]:[]),...(P.motto==='challenge'?[{icon:'📜',label:'家訓「挑戦を恐れるな」',d:.1}]:[])]);
+  return calcOdds(.28,[{g:'know',w:.2},...(P.abroad?[{icon:'✈️',label:'留学経験',d:.2}]:[]),...(P.motto==='challenge'?[{icon:'📜',label:'家訓「挑戦を恐れるな」',d:.1}]:[])]);
 }
 function doAction(id){
   if(P.actUsed||modalOpen||!P.alive)return;
