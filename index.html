@@ -38,6 +38,33 @@
   .opts input{margin-right:6px}
   .opts label:has(input:checked){border-color:var(--accent);background:#eaf5f2}
   .start-row{text-align:center}
+  .av{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;font-size:25px;line-height:1;vertical-align:middle}
+  .av.big{width:56px;height:56px;font-size:34px}
+  .avatar{position:relative}
+  .avbadge{position:absolute;right:-6px;bottom:-4px;font-size:18px}
+  .avprev{display:flex;gap:10px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+  .avopts small{display:block;margin-top:6px}
+  .opts label.sw{padding:4px}
+  .opts label.sw input{display:none}
+  .opts label.sw i{display:block;width:28px;height:28px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}
+  .opts label.sw:has(input:checked) i{box-shadow:0 0 0 3px var(--accent)}
+  .rwrap{position:relative;width:200px;height:200px;margin:6px auto}
+  .rwrap svg{width:200px;height:200px}
+  .rw{transform-origin:100px 100px;transition:transform 2.4s cubic-bezier(.15,.75,.2,1)}
+  .rpointer{position:absolute;top:-8px;left:50%;transform:translateX(-50%);border-left:11px solid transparent;border-right:11px solid transparent;border-top:20px solid var(--ink);z-index:2}
+  .odds{background:#f3ecdf;border-radius:12px;padding:8px 12px;font-size:13px;margin-top:6px}
+  .odds div{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
+  .odds .sum{border-top:1px solid #d9cfbd;margin-top:4px;padding-top:5px;font-size:15px}
+  .odds b.up{color:var(--good)} .odds b.down{color:var(--bad)}
+  .rbig{text-align:center;font-size:24px;font-weight:700;margin-top:10px}
+  .rbig.up{color:var(--good)} .rbig.down{color:var(--bad)}
+  .mg{text-align:center;margin-top:10px}
+  .mgbar{position:relative;height:34px;background:#efe8da;border-radius:17px;overflow:hidden;margin:8px 0}
+  .mgzone{position:absolute;top:0;bottom:0;background:#7cc49a;border-radius:4px}
+  .mgzone.hit{background:#2fa36b}
+  .mgmark{position:absolute;top:-2px;bottom:-2px;width:6px;margin-left:-3px;background:var(--ink);border-radius:3px}
+  .mginfo{display:flex;justify-content:space-between;font-size:14px;margin-bottom:10px}
+  .mgbtn{width:100%;font-size:22px;padding:16px;border-radius:14px;touch-action:manipulation}
   .resume{margin-bottom:14px;border:2px solid var(--accent);display:grid;gap:8px}
   .resume .btn{justify-self:start}
   .mottos{margin-top:12px}
@@ -157,7 +184,7 @@
     .speed{order:3;width:100%;flex-wrap:nowrap;overflow-x:auto;gap:5px;-webkit-overflow-scrolling:touch}
     .speed button{flex:none;min-height:38px;padding:4px 11px;font-size:14px}
     .speed button small{display:none}
-    .mstat{display:grid;grid-template-columns:repeat(5,1fr) auto;gap:6px;align-items:center;padding:6px 10px;background:var(--card);border-bottom:1px solid var(--line);order:4;width:calc(100% + 20px);margin:0 -10px -6px;font-size:11px;border-top:1px solid var(--line)}
+    .mstat{display:grid;grid-template-columns:repeat(6,1fr) auto;gap:4px;align-items:center;padding:6px 10px;background:var(--card);border-bottom:1px solid var(--line);order:4;width:calc(100% + 20px);margin:0 -10px -6px;font-size:10px;border-top:1px solid var(--line)}
     .mstat .bar{height:6px}
     .mstat .mm{font-weight:700;font-size:12.5px;white-space:nowrap}
     .mnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:15;background:rgba(255,253,248,.98);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
@@ -209,6 +236,10 @@
     <div><label class="lbl" for="code">生まれのコード <small>（任意）</small></label>
       <input type="text" id="code" maxlength="8" placeholder="例：B-7KQ2M" autocomplete="off" autocapitalize="characters">
       <small id="code-note">友だちから受け取ったコードを入れると、同じ生まれ（国・家・同じ瞬間の4人）から始まります。空欄なら新しい生まれになります。</small></div>
+    <div><span class="lbl">見た目</span>
+      <div id="avprev" class="avprev"></div>
+      <div class="avopts"><small>肌の色</small><div class="opts" id="av-tone"></div><small>髪</small><div class="opts" id="av-hair"></div><small>背景の色</small><div class="opts" id="av-color"></div></div>
+      <small>性別と生まれる国はくじで決まります。見た目は年齢とともに成長し、子どもにも受け継がれます。</small></div>
     <div><span class="lbl">生まれる国の決まり方</span>
       <div class="opts">
         <label><input type="radio" name="mode" value="births" checked>いま生まれる赤ちゃんの数に比例</label>
@@ -216,6 +247,7 @@
       </div></div>
     <div><span class="lbl">時間の流れ</span>
       <small>1年は 1×で約40秒、2×で約20秒です。遊んでいる途中でも 4×・8× や一時停止、「次の選択まで」の早送りに切り替えられます。</small></div>
+    <div class="opts"><label><input type="checkbox" id="fx" checked>受験・大会・治療などでミニゲームとルーレットを使う</label></div>
     <div class="opts"><label><input type="checkbox" id="gentle">重い出来事の表現を控えめにする</label></div>
     <div class="start-row"><button class="btn" id="start">生まれる</button></div>
     <div class="note">
@@ -399,7 +431,7 @@ const healthNorm=a=>62-Math.max(0,a-50)*.5-Math.max(0,a-70)*.7;
 /* ============================================================
    状態
    ============================================================ */
-let P=null,others=[],settings={yearMs:40000,mode:'births',gentle:false};
+let P=null,others=[],settings={yearMs:40000,mode:'births',gentle:false,fx:true,av:{tone:'auto',hair:'n',color:'#f3d9c6'}};
 let speed=1,elapsed=0,loopId=null,modalQueue=[],modalOpen=false,skipping=false;
 const WEALTH_LABEL=['とても苦しい','苦しい','ふつう','ゆとりがある','とても裕福'];
 const EDU_LABEL=['学校に通えなかった','小学校卒','中学校卒','高校卒','大学卒','大学院卒'];
@@ -412,6 +444,7 @@ const FOCUS={
   work:{label:'仕事に打ち込む',icon:'💼',desc:'収入↑ 疲れる'},
   people:{label:'大切な人と',icon:'🤝',desc:'絆・幸福↑'},
   rest:{label:'のんびり',icon:'☕',desc:'幸福回復'},
+  create:{label:'創作・表現',icon:'🎨',desc:'感性・幸福↑'},
 };
 const SPEND={
   save:{label:'節約する',icon:'🪙',desc:'貯金↑ 幸福↓'},
@@ -479,7 +512,9 @@ function newLife(name,inh=null,code=null){
     // ここまでと同じ乱数の流れで、才能ときょうだいも決める（生まれのコードで再現できる）
     P.talent=Math.random();P.sibs=inh?(inh.sibs||[]):genSibs();
     P.sport=clamp(6+P.talent*12+(P.health-60)*.25);
+    P.sense=clamp(6+Math.random()*14+P.talent*4);
   } finally { Math.random=real; }
+  P.av=inh&&inh.av?{...inh.av,hair:Math.random()<.5?inh.av.hair:pick(Object.keys(HAIRS))}:{...settings.av};
   P.dream=null;P.dreamDone=null;P.club=null;P.pro=null;P.trips=0;P.everBiz=false;P.eraSeen=[];
   P.era=inh?inh.era:makeEra(code);P.gratitude=inh?(inh.gratitude||[]):[];
   if(eraActive('remote'))P.eduBonus=Math.min(.45,P.eduBonus+.05);
@@ -618,6 +653,11 @@ function openNextModal(){
   if(modalOpen||!modalQueue.length)return;
   const m=modalQueue.shift();modalOpen=true;skipping=false;
   const box=$('#modal-box');
+  if(m.opts.custom){
+    box.innerHTML=`<h2>${m.title}</h2><div>${m.html}</div><div class="custom"></div>`;$('#modal').hidden=false;let fin=false;
+    m.opts.custom(box.querySelector('.custom'),()=>{if(fin)return;fin=true;$('#modal').hidden=true;modalOpen=false;clampAll();render();openNextModal();});
+    return;
+  }
   box.innerHTML=`<h2>${m.title}</h2><div>${m.html}</div><div class="${m.opts.cards?'cards':'choices'}"></div>`;
   const wrap=box.querySelector(m.opts.cards?'.cards':'.choices');let done=false;
   const choose=ch=>{if(done)return;done=true;$('#modal').hidden=true;modalOpen=false;ch.fn&&ch.fn();clampAll();render();openNextModal();};
@@ -656,7 +696,7 @@ function yearStep(){
   if(MILESTONES[P.age])milestone();
   openNextModal();
 }
-function clampAll(){for(const k of['health','happy','know','bond','sport'])P[k]=clamp(P[k]);P.wealthP=clamp(P.wealthP,.01,.99);P.debt=Math.max(0,P.debt);}
+function clampAll(){for(const k of['health','happy','know','bond','sport','sense'])P[k]=clamp(P[k]);P.wealthP=clamp(P.wealthP,.01,.99);P.debt=Math.max(0,P.debt);}
 function applyFocus(){
   const f=P.focus,c=P.c;
   if(P.age<6){P.bond+=1;P.know+=1.5*(.6+c.edu*.4);P.sport+=1.5;}
@@ -669,7 +709,8 @@ function applyFocus(){
       case'health':P.health+=P.motto==='health'?3.5:2.5;break;
       case'work':P.health-=1;P.bond-=1;break;
       case'people':P.bond+=3;P.happy+=2;break;
-      case'rest':P.happy+=3;P.health+=.5;P.sport-=.5;break;
+      case'rest':P.happy+=3;P.health+=.5;P.sport-=.5;P.sense+=.5;break;
+      case'create':P.sense+=3;P.happy+=1.5;break;
     }
   }
   if(P.age>=15){ if(P.spend==='save')P.happy-=P.motto==='thrift'?.5:2; if(P.spend==='rich'){P.happy+=2.5;P.health+=.8;} }
@@ -681,13 +722,108 @@ function applyFocus(){
     if(f==='work'&&P.job&&JOBS[0].concat(JOBS[1]).some(j=>j[0]===P.job))P.sport+=.5; // 体を使う仕事
     if(P.club&&P.club.active&&CLUBS[P.club.key].type==='sport')P.sport+=2.5;
     if(P.age<18)P.sport+=.8; // 成長期
+    if(P.club&&P.club.active&&CLUBS[P.club.key].type==='art')P.sense+=2.5;
+    if(P.age<18)P.sense+=.5;
   }
-  if(P.age>30)P.sport-=.8;if(P.age>50)P.sport-=.8;if(P.age>70)P.sport-=.8;
+  if(P.age>30)P.sport-=.8;if(P.age>50)P.sport-=.8;if(P.age>70)P.sport-=.8;if(P.age>65)P.sense-=.3;
   // よく体を動かしている人は、健康を保ちやすい
   P.health+=(healthNorm(P.age)+(P.sport-40)*.06-P.health)*.08;
   if(livingIncome()<1500)P.health-=eraActive('energy')?.8:1.5;
   if(P.age>65)P.know-=.3;
   P.bond+=(55-P.bond)*.03+(P.married?1:0)+(P.children?.5:0)-(P.age>75?.6:0);
+}
+
+/* ============================================================
+   演出：ゲージで大きさが変わるルーレット／タイミングのミニゲーム／アバター
+   ============================================================ */
+const GAUGE={know:{icon:'📘',name:'知識'},sport:{icon:'🏃',name:'運動'},sense:{icon:'🎨',name:'感性'},health:{icon:'❤️',name:'健康'},happy:{icon:'☀️',name:'幸福'},bond:{icon:'🤝',name:'絆'}};
+// 確率 = 基本（国・家の状況など）＋ 各ゲージの影響 ＋ そのほかの要素
+// factors: [{g:'know',w:.4}] → (ゲージ-50)/50×w ／ [{label:'留学経験',icon:'✈️',d:.2}] → 固定の加減
+function calcOdds(base,factors){
+  const rows=[{icon:'🌍',label:'基本（国・家の状況など）',d:base}];
+  for(const f of factors){
+    if(f.g){const v=Math.round(P[f.g]),d=(P[f.g]-50)/50*f.w;rows.push({icon:GAUGE[f.g].icon,label:`${GAUGE[f.g].name} ${v}`,d});}
+    else if('d' in f)rows.push({icon:f.icon||'・',label:f.label,d:f.d});
+  }
+  return {p:clamp(rows.reduce((a,r)=>a+r.d,0),.03,.97),rows};
+}
+const pct=d=>`${d>=0?'+':''}${Math.round(d*100)}%`;
+function oddsTable(o){
+  return `<div class="odds">${o.rows.map((r,i)=>`<div><span>${r.icon} ${r.label}</span><b class="${i===0?'':r.d>=0?'up':'down'}">${i===0?Math.round(r.d*100)+'%':pct(r.d)}</b></div>`).join('')}
+    <div class="sum"><span>当たりの大きさ</span><b>${Math.round(o.p*100)}%</b></div></div>`;
+}
+// ルーレット：当たりの扇形の大きさ＝確率。cb(当たったか)
+function roulette(title,html,odds,labels,cb){
+  const win=chance(odds.p);
+  if(!settings.fx){cb(win);return;}
+  ask(title,html,[],{custom:(el,finish)=>{
+    const A=odds.p*360,arc=(a0,a1,col)=>{const r=92,p=a=>[100+r*Math.sin(a*Math.PI/180),100-r*Math.cos(a*Math.PI/180)];const [x0,y0]=p(a0),[x1,y1]=p(a1);
+      return `<path d="M100,100 L${x0},${y0} A${r},${r} 0 ${a1-a0>180?1:0} 1 ${x1},${y1} Z" fill="${col}" stroke="#fff" stroke-width="2"/>`;};
+    const lab=(a,t)=>{const r=55;return `<text x="${100+r*Math.sin(a*Math.PI/180)}" y="${100-r*Math.cos(a*Math.PI/180)}" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="700" fill="#fff">${t}</text>`;};
+    el.innerHTML=`<div class="rwrap"><div class="rpointer"></div><svg viewBox="0 0 200 200"><g class="rw">${arc(0,A,'#2fa36b')}${arc(A,360,'#b9b2a5')}${A>40?lab(A/2,'当たり'):''}${360-A>40?lab((A+360)/2,'はずれ'):''}</g><circle cx="100" cy="100" r="13" fill="#fffdf8" stroke="#2d2a26" stroke-width="2"/></svg></div>
+      ${oddsTable(odds)}<div class="rres"></div><div class="choices"></div>`;
+    const t=win?rnd(Math.min(4,A/2),Math.max(A-4,A/2)):rnd(Math.min(A+4,(A+360)/2),Math.max(356,(A+360)/2)),R=360*5+(360-t);
+    const g=el.querySelector('.rw');requestAnimationFrame(()=>requestAnimationFrame(()=>{g.style.transform=`rotate(${R}deg)`;}));
+    setTimeout(()=>{
+      el.querySelector('.rres').innerHTML=`<div class="rbig ${win?'up':'down'}">${win?labels.win:labels.lose}</div>`;
+      let done=false;const ok=()=>{if(done)return;done=true;cb(win);finish();};
+      const b=document.createElement('button');b.innerHTML='<b>OK</b>';b.onclick=ok;el.querySelector('.choices').appendChild(b);
+      if(isAuto())setTimeout(ok,1200);
+    },2600);
+  }});
+}
+// タイミングのミニゲーム：3回タップ。緑の幅はゲージで広がる。cb(成功回数0〜3)
+const MINI={
+  exam:{title:'📝 試験本番',desc:'集中！動く印が<b>緑のところ</b>に来たらタップ。緑の幅は<b>知識</b>で広がります。',tap:'解く！'},
+  match:{title:'🏆 決勝戦',desc:'勝負の瞬間！印が<b>緑のところ</b>に来たらタップ。緑の幅は<b>運動・感性</b>で広がります。',tap:'いけっ！'},
+  tryout:{title:'⚾ 入団テスト',desc:'プロのスタッフが見ています。<b>緑のところ</b>でタップ！結果が契約に影響します。',tap:'アピール！'},
+  audition:{title:'🎤 オーディション',desc:'審査員の前で披露します。<b>緑のところ</b>でタップ！結果が契約に影響します。',tap:'表現する！'},
+};
+function miniGame(kind,stat,cb){
+  const K=MINI[kind],width=clamp(9+stat*.22,9,32);
+  if(!settings.fx){let s=0;for(let i=0;i<3;i++)if(chance(clamp(.2+stat/140,.2,.85)))s++;cb(s);return;}
+  ask(K.title,K.desc,[],{custom:(el,finish)=>{
+    el.innerHTML=`<div class="mg"><div class="mgbar"><div class="mgzone"></div><div class="mgmark"></div></div>
+      <div class="mginfo"><span class="mgr">1 / 3</span><span class="mgs"></span></div><button class="btn mgbtn">${K.tap}</button></div>`;
+    const zone=el.querySelector('.mgzone'),mark=el.querySelector('.mgmark'),btn=el.querySelector('.mgbtn');
+    let round=0,score=0,pos=0,dir=1,speed=1.2,z=0,raf=0,last=0,over=false,hits='';
+    const newZone=()=>{z=rnd(4,96-width);zone.style.left=z+'%';zone.style.width=width+'%';};
+    const loop=ts=>{if(over)return;const dt=last?Math.min(50,ts-last):16;last=ts;pos+=dir*speed*dt/16;if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}mark.style.left=pos+'%';raf=requestAnimationFrame(loop);};
+    const tap=()=>{if(over)return;const hit=pos>=z-1&&pos<=z+width+1;score+=hit?1:0;hits+=hit?'⭕':'❌';round++;
+      el.querySelector('.mgs').textContent=hits;zone.classList.toggle('hit',hit);
+      if(round<3){speed+=.45;newZone();el.querySelector('.mgr').textContent=`${round+1} / 3`;}
+      else{over=true;cancelAnimationFrame(raf);btn.disabled=true;el.querySelector('.mgr').textContent=`結果：${score} / 3`;setTimeout(()=>{cb(score);finish();},900);}};
+    btn.onclick=tap;newZone();raf=requestAnimationFrame(loop);
+    if(isAuto()){const p=clamp(width/100*2.4,.2,.9);const autoTap=()=>{if(over)return;const hit=chance(p);pos=hit?z+width/2:(z>50?z-10:z+width+10);tap();if(!over)setTimeout(autoTap,600);};setTimeout(autoTap,700);}
+  }});
+}
+const feel=s=>'⭕'.repeat(s)+'・'.repeat(3-s);
+
+/* ---------- アバター ---------- */
+const TONES=['🏻','🏼','🏽','🏾','🏿'];
+const HAIRS={n:{label:'ふつう',m:'👨',f:'👩'},curly:{label:'くせ毛',m:'👨‍🦱',f:'👩‍🦱'},red:{label:'赤毛',m:'👨‍🦰',f:'👩‍🦰'},blond:{label:'金髪',m:'👱‍♂️',f:'👱‍♀️'}};
+const AV_COLORS=['#f3d9c6','#cfe6dc','#d6e2f5','#f5d6e3','#efe3b8','#e0d4f2'];
+function autoTone(c){const r=c.region;if(/アフリカ/.test(r))return 4;if(/南アジア/.test(r)&&!/東南/.test(r))return 3;if(/東南アジア|西アジア|北アフリカ|中央アメリカ|南アメリカ|カリブ/.test(r))return 2;if(/東アジア/.test(r))return 1;return 0;}
+function withTone(e,t){const a=Array.from(e);return a[0]+TONES[t]+a.slice(1).join('');}
+function avatarOf(p,age){
+  const m=p.sex==='male',av=p.av||{tone:'auto',hair:'n'},t=av.tone==='auto'?autoTone(p.origin||p.c):av.tone;
+  let e;if(age<3)e='👶';else if(age<13)e=m?'👦':'👧';else if(age<62)e=(HAIRS[av.hair]||HAIRS.n)[m?'m':'f'];else if(age<76)e=m?'👨‍🦳':'👩‍🦳';else e=m?'👴':'👵';
+  return withTone(e,t);
+}
+function avatarHtml(p,age,size=''){return `<span class="av ${size}" style="background:${(p.av&&p.av.color)||AV_COLORS[0]}">${avatarOf(p,age)}</span>`;}
+function initAvatarPicker(){
+  const av=settings.av;
+  const radios=(name,items,cur)=>items.map(([v,l])=>`<label><input type="radio" name="${name}" value="${v}" ${String(cur)===String(v)?'checked':''}>${l}</label>`).join('');
+  $('#av-tone').innerHTML=radios('avtone',[['auto','自動'],...TONES.map((t,i)=>[i,'✋'+t])],av.tone);
+  $('#av-hair').innerHTML=radios('avhair',Object.entries(HAIRS).map(([k,h])=>[k,h.label]),av.hair);
+  $('#av-color').innerHTML=AV_COLORS.map(c=>`<label class="sw"><input type="radio" name="avcolor" value="${c}" ${av.color===c?'checked':''}><i style="background:${c}"></i></label>`).join('');
+  const upd=()=>{
+    const v=n=>(document.querySelector(`input[name=${n}]:checked`)||{}).value;
+    av.tone=v('avtone')==='auto'?'auto':+v('avtone');av.hair=v('avhair')||'n';av.color=v('avcolor')||AV_COLORS[0];
+    const demo={sex:'female',av,c:COUNTRIES[0],origin:null},demo2={sex:'male',av,c:COUNTRIES[0],origin:null};
+    $('#avprev').innerHTML=avatarHtml(demo,30,'big')+avatarHtml(demo2,30,'big')+'<small>（肌の色「自動」は生まれた国に合わせます）</small>';
+  };
+  ['#av-tone','#av-hair','#av-color'].forEach(s=>$(s).addEventListener('change',upd));upd();
 }
 
 /* ============================================================
@@ -784,22 +920,31 @@ function clubTick(){
   const cl=P.club;if(!cl||!cl.active)return;
   const C2=CLUBS[cl.key];
   if(P.age>22||(P.job&&!P.childWorker&&P.school!=='night'&&!activePro())){cl.active=false;if(cl.skill>=60)log(`${C2.label}は趣味として続けることにしました`,'info',C2.icon);return;}
-  cl.skill=clamp(cl.skill+(C2.type==='sport'?2+P.talent*5+P.sport/25:3+P.talent*7)+(P.focus==='play'?3:0)+(P.focus==='health'&&C2.type==='sport'?1:0)+rnd(-1,2));
+  cl.skill=clamp(cl.skill+(C2.type==='sport'?2+P.talent*5+P.sport/25:2+P.talent*5+P.sense/25)+(P.focus==='play'||(P.focus==='create'&&C2.type==='art')?3:0)+(P.focus==='health'&&C2.type==='sport'?1:0)+rnd(-1,2));
   if(P.age>=12&&P.age<=21&&chance(.45)){
     const s=cl.skill,name=C2.type==='sport'?'大会':'コンクール';
-    if(s>=85){P.happy+=8;log(`${C2.label}の全国${name}で優勝し、代表に選ばれました！`,'good','🏆',true);}
+    if(s>=65&&(P.flags.lastFinal||-9)+2<=P.age){
+      P.flags.lastFinal=P.age;const st=C2.type==='sport'?'sport':'sense';
+      miniGame('match',P[st],sc=>{
+        const od=calcOdds(.12,[{icon:C2.icon,label:`${C2.label}の腕前 ${Math.round(s)}`,d:(s-65)/35*.4},{g:st,w:.2},{icon:'🎮',label:`決勝の手ごたえ ${feel(sc)}`,d:(sc-1.5)*.12}]);
+        roulette(`🏆 全国${name}の決勝`,'',od,{win:'🏆 優勝！',lose:'🥈 準優勝'},w=>{
+          if(w){P.happy+=8;cl.skill=clamp(cl.skill+3);log(`${C2.label}の全国${name}で優勝し、代表に選ばれました！`,'good','🏆',true);}
+          else{P.happy+=5;log(`${C2.label}の全国${name}で準優勝しました`,'good','🥈',true);}
+        });
+      });
+    }
     else if(s>=65){P.happy+=5;log(`${C2.label}の全国${name}に出場しました`,'good','🥈',true);}
     else if(s>=45){P.happy+=4;log(`${C2.label}の地区${name}で優勝しました`,'good','🥉');}
     else{P.happy+=2;P.bond+=2;log(`${C2.label}の地区${name}に出場しました。仲間と力を合わせました`,'good',C2.icon);}
   }
   // スカウト
   if(P.age>=16&&P.age<=22&&cl.skill>=72&&!P.flags.scoutAsked){
-    const p=popularity(cl.key,P.c)*(cl.skill-68)/32*(P.c.gdp<5?.6:1)*(C2.type==='sport'?clamp(.4+P.sport/100,.4,1.4):1);
+    const p=popularity(cl.key,P.c)*(cl.skill-68)/32*(P.c.gdp<5?.6:1)*clamp(.4+(C2.type==='sport'?P.sport:P.sense)/100,.4,1.4);
     if(chance(p)){
       P.flags.scoutAsked=true;
       const inc=incomeAt(P.c,clamp(.95+.045*(cl.skill-72)/28,.9,.995))*(1.2+(cl.skill-72)/12);
       ask(`🎉 プロからのスカウト`,`あなたの${C2.label}の腕前に、プロのチームから声がかかりました！<div class="q">${C2.pro}として契約すると、年収はおよそ${yen(inc*100)}。<br>ただし、活躍できるかはわからず、けがや不調で早く引退することもあります。</div>`,[
-        {label:`${C2.pro}になる`,desc:'夢の舞台へ。学校や今の道はいったん離れる',auto:3,fn:()=>goPro(cl.key,inc)},
+        {label:`${C2.pro}になる`,desc:'夢の舞台へ。学校や今の道はいったん離れる',auto:3,fn:()=>miniGame(C2.type==='sport'?'tryout':'audition',C2.type==='sport'?P.sport:P.sense,sc=>{goPro(cl.key,inc*(.75+sc*.17));log(`${C2.type==='sport'?'入団テスト':'オーディション'}の手ごたえ：${feel(sc)}（契約の金額に反映）`,'info',C2.icon);})},
         {label:'プロにはならず、学業や仕事の道を選ぶ',auto:1,fn:()=>{cl.active=false;log(`プロへの誘いを断り、${C2.label}は趣味として続けることにしました`,'info',C2.icon,true,'c');}}]);
     }
   }
@@ -815,6 +960,7 @@ function proYear(){ // プロの1年（economy から呼ぶ）
   const youth=C2.type==='sport'?(P.age<=27?rnd(0,3):P.age>=31?-rnd(1,4):rnd(-1,1)):rnd(-.5,1.5);
   cl.skill=clamp(cl.skill+youth+(P.focus==='work'?1:0));
   if(C2.type==='sport'&&P.sport<45&&P.age>=28)cl.skill-=1.5;
+  if(C2.type==='art'&&P.sense<45)cl.skill-=1;
     const perf=cl.skill/100+rnd(-.3,.3);let mult=1;
   if(perf>1.02){mult=1.7;P.happy+=8;pr.best++;log(C2.type==='sport'?`シーズンMVP級の大活躍！（${C2.pro}）`:`作品が大ヒットしました！`,'good','🌟',true);}
   else if(perf<.55){mult=.7;P.happy-=4;log(C2.type==='sport'?'不調のシーズンでした':'思うように作品が売れない一年でした','bad','🌧');}
@@ -964,11 +1110,10 @@ function stageEvents(){
     if(wasNight){P.school=null;P.inSchool=false;log('夜間学校を卒業しました','good','🎓',true);}
     const access=clamp(Math.pow(c.edu,1.6)*(.45+P.wealthP*.8)*(wasNight?.6:1)+P.eduBonus,.02,.97);
     if(!wasNight&&chance(access)){
-      const pass=clamp((P.know-30)/55+c.edu*.15,.05,.95);
+      const pass=examOdds(0).p;
       ask('🌸 大学受験',`高校を卒業します。大学で何を学びますか？<div class="q">合格の見込み：およそ${Math.round(pass*100)}%${P.wealthP<.6?'<br>学費は奨学金（借金）になります':''}</div>`,[
         ...Object.entries(FIELDS).map(([k,f])=>({html:`<span class="ji">${f.icon}</span><b>${f.label}</b><small>${f.jobs.slice(0,3).map(j=>j[0]).join('・')}など</small>`,auto:k==='art'?.5:1,fn:()=>{
-          if(chance(pass))enterUni(k,a);
-          else examFail(k);}})),
+          examFlow(k,a,0);}})),
         {html:'<span class="ji">🃏</span><b>大学には行かず就職する</b>',auto:.8,fn:()=>{leaveSchool();log('高校を卒業して就職する道を選びました','info','🎓',false,'c');jobOffer('🃏 就職','高校を卒業し、働き始めます。');}}],{cards:true});
     }else if(!wasNight){leaveSchool();log('大学へ進む道は遠く、働き始めます','info','🎓',false,'f');jobOffer('🃏 就職','高校を卒業し、働き始めます。');}
     else if(P.childWorker){P.childWorker=false;recalcIncome();}
@@ -976,9 +1121,7 @@ function stageEvents(){
   if(a===18&&P.childWorker){P.childWorker=false;recalcIncome();}
   // 浪人：1年後に再受験
   if(P.school==='ronin'&&a===P.flags.roninAge+1){
-    const pass=clamp((P.know-30)/55+c.edu*.15+.15,.05,.97);
-    if(chance(pass)){log(`浪人の末、大学に合格しました！（合格の見込み${Math.round(pass*100)}%）`,'good','🌸',true,'f');enterUni(P.field,a);}
-    else{leaveSchool();log('再受験でも届きませんでした。働き始めます','bad','🍂',true,'f');jobOffer('🃏 就職','働き口を探します。');}
+    examFlow(P.field,a,.15);
   }
   // 留学（高校）
   if(a===16&&P.school==='high'&&!P.abroad&&chance(clamp(P.wealthP*.6+c.edu*.25-.15+(P.know-50)/200,.05,.6)))
@@ -1080,6 +1223,20 @@ function stageEvents(){
     }
   }
 }
+function examOdds(extra,score){
+  const fs=[{g:'know',w:.45}];
+  if(extra)fs.push({icon:'📖',label:'浪人して勉強した',d:extra});
+  if(score!=null)fs.push({icon:'📝',label:`試験の手ごたえ ${feel(score)}`,d:(score-1.5)*.1});
+  return calcOdds(.32+P.c.edu*.15,fs);
+}
+function examFlow(k,a,extra){ // 試験（ミニゲーム）→ 合格発表（ルーレット）
+  miniGame('exam',P.know,sc=>{
+    roulette('🌸 合格発表','',examOdds(extra,sc),{win:'🌸 合格！',lose:'🍂 不合格…'},w=>{
+      if(extra){ if(w){log('浪人の末、大学に合格しました！','good','🌸',true,'f');enterUni(k,a);} else{leaveSchool();log('再受験でも届きませんでした。働き始めます','bad','🍂',true,'f');jobOffer('🃏 就職','働き口を探します。');} }
+      else{ if(w)enterUni(k,a); else examFail(k); }
+    });
+  });
+}
 function enterUni(k,a){
   const m=M(P.c);P.school='uni';P.inSchool=true;P.field=k;P.uniEnd=a+4;
   if(P.wealthP<.6)P.debt+=m*1.5;
@@ -1127,6 +1284,7 @@ function makeOffer(tierOrField){
 function jobOffer(title,intro,current=false){
   const t=[0,1,1,2,3,3][P.eduLevel];
   const offers=P.eduLevel>=4&&P.field?[makeOffer(P.field),makeOffer(P.field),makeOffer(3)]:[makeOffer(t),makeOffer(t),makeOffer(Math.max(0,t-1))];
+  if(P.sense>=65&&P.eduLevel>=2&&chance(.6))offers.push(makeOffer('art')); // 感性が高いと芸術系の仕事カードも
   if(P.eduLevel===5)offers.forEach(o=>o.pct=Math.min(.99,o.pct+.1));
   offers.forEach(o=>o.inc=incomeAt(P.c,o.pct)*(.8+.1*P.eduLevel)*o.mult);
   const choices=[];
@@ -1189,7 +1347,7 @@ function economy(){
 }
 function updateHappy(){
   const li=livingIncome(),rel=Math.log(Math.max(li,100)/meanInc(P.c));
-  const target=58+7*clamp(rel,-2,1.5)+(P.health-60)*.3+(P.bond-55)*.35+(li<1500?-8:li<3000?-4:0)-(P.debt>M(P.c)?5:P.debt>0?2:0)+(P.house?3:0);
+  const target=58+7*clamp(rel,-2,1.5)+(P.health-60)*.3+(P.bond-55)*.35+(li<1500?-8:li<3000?-4:0)-(P.debt>M(P.c)?5:P.debt>0?2:0)+(P.house?3:0)+(P.sense-40)*.04;
   P.happy+=(target-P.happy)*.22;
 }
 
@@ -1223,15 +1381,15 @@ const EVENTS=[
   {w:()=>.5,fn:p=>{p.savings+=M(p.c)*.2;p.happy+=3;log('くじで少しだけお金が当たりました','good','🍀',false,'f');}},
   {w:p=>p.age>=20&&p.parents>(p.parentDeathAge!==null?1:0)?(p.age/40)*(70/p.c.le):0,fn:p=>{p.parents--;p.happy-=10;p.bond-=3;const inh=M(p.c)*p.wealthP;p.savings+=inh;log(p.parents?'親のひとりが亡くなりました':'もうひとりの親も亡くなりました','big','🕊',true,'f');}},
   {w:p=>p.age>=22&&p.savings>M(p.c)?1:0,fn:p=>ask('💹 もうけ話','知り合いから「必ずもうかる」という話を持ちかけられました。',[
-    {label:'話に乗る',desc:'大きく増えるかもしれないし、失うかもしれない',auto:.7,fn:()=>{const amt=p.savings*.5;if(chance(.35)){p.savings+=amt*.8;log('もうけ話がうまくいき、お金が増えました','good','📈',false,'c');}else{p.savings-=amt*.8;p.happy-=6;log('もうけ話は詐欺まがいで、お金を失いました','bad','📉',true,'c');}}},
+    {label:'話に乗る',desc:'大きく増えるかもしれないし、失うかもしれない',auto:.7,fn:()=>{const amt=p.savings*.5;roulette('💹 もうけ話の結果','',calcOdds(.3,[{g:'know',w:.15}]),{win:'📈 うまくいった！',lose:'📉 だまされた…'},w=>{if(w){p.savings+=amt*.8;log('もうけ話がうまくいき、お金が増えました','good','📈',false,'c');}else{p.savings-=amt*.8;p.happy-=6;log('もうけ話は詐欺まがいで、お金を失いました','bad','📉',true,'c');}});}},
     {label:'断る',auto:2,fn:()=>log('うまい話は断りました','info',null,false,'c')}])},
-  {w:()=>1,fn:p=>{p.happy+=5;log(`新しい趣味を見つけました（${pick(['歌','料理','サッカー','絵を描くこと','楽器','読書','裁縫','ダンス','釣り'])}）`,'good','🎨');}},
+  {w:()=>1,fn:p=>{p.happy+=5;p.sense+=2;log(`新しい趣味を見つけました（${pick(['歌','料理','サッカー','絵を描くこと','楽器','読書','裁縫','ダンス','釣り'])}）`,'good','🎨');}},
   {w:p=>p.age>=35&&!p.illness?p.age/30:0,fn:p=>{
     const ill=pick(p.age>55?['心臓の病気','がん','脳卒中','糖尿病']:['結核','重い肺炎','がん','肝臓の病気']);
-    const cost=M(p.c)*rnd(.6,2),pc=p.insLife?cost*.2:cost,ok=clamp(.35+(p.c.le-55)/40+p.wealthP*.2+(p.checkup?.15:0),.2,.97);
+    const cost=M(p.c)*rnd(.6,2),pc=p.insLife?cost*.2:cost,od=calcOdds(.3+(p.c.le-55)/40+p.wealthP*.15,[{g:'health',w:.25},...(p.checkup?[{icon:'🩺',label:'健康診断で早く見つかった',d:.15}]:[])]),ok=od.p;
     log(`${ill}が見つかりました${p.checkup?'（健康診断で早めに見つかりました）':''}`,'bad','🏥',true,'f');p.checkup=false;
     ask('🏥 病気が見つかる',`${ill}が見つかりました。<div class="q">治療費：${yen(pc)}${p.insLife?'（保険適用）':''}<br>治療がうまくいく見込み：およそ${Math.round(ok*100)}%</div>`,[
-      {label:'治療を受ける',desc:p.savings<pc?'足りない分は借金になる':'貯金から払う',auto:3,fn:()=>{p.savings-=pc;if(chance(ok)){p.health-=5;log(`${ill}の治療を受け、回復に向かいました`,'good','💊',true,'c');}else{p.health-=15;p.illness=ill;log(`${ill}の治療を受けましたが、思うように良くなりません`,'bad','🏥',true,'c');}}},
+      {label:'治療を受ける',desc:p.savings<pc?'足りない分は借金になる':'貯金から払う',auto:3,fn:()=>{p.savings-=pc;roulette('💊 治療の結果','',od,{win:'💊 回復に向かいました',lose:'🏥 思わしくありません'},w=>{if(w){p.health-=5;log(`${ill}の治療を受け、回復に向かいました`,'good','💊',true,'c');}else{p.health-=15;p.illness=ill;log(`${ill}の治療を受けましたが、思うように良くなりません`,'bad','🏥',true,'c');}});}},
       {label:'治療を受けない',desc:'お金は残るが、体への負担は大きい',auto:1,fn:()=>{p.health-=20;p.illness=ill;log(`${ill}を抱えたまま暮らすことにしました`,'bad','🏥',true,'c');}}]);
   }},
   {w:p=>p.c.conflict*2.5*(eraActive('peace')?.3:1),fn:p=>{log(settings.gentle?'住んでいる地域の情勢が不安定になりました':'住んでいる地域で武力衝突が起きました','big','⚠️',true,'f');
@@ -1280,6 +1438,9 @@ function actionList(){
     {id:'rehireend',icon:'🌅',label:'短時間の仕事をやめる',cost:null,show:p.rehired,hint:'ゆっくり過ごす'},
   ].filter(x=>x.show);
 }
+function migOdds(){
+  return calcOdds(.42,[{g:'know',w:.2},...(P.abroad?[{icon:'✈️',label:'留学経験',d:.2}]:[]),...(P.motto==='challenge'?[{icon:'📜',label:'家訓「挑戦を恐れるな」',d:.1}]:[])]);
+}
 function doAction(id){
   if(P.actUsed||modalOpen||!P.alive)return;
   const p=P,m=M(p.c),a=actionList().find(x=>x.id===id);if(!a)return;
@@ -1287,8 +1448,8 @@ function doAction(id){
   const payCost=c=>{p.savings-=c;if(p.savings<0){p.debt-=p.savings;p.savings=0;}};
   const simple={
     check:()=>{payCost(a.cost);p.health+=3;p.checkup=true;log('健康診断を受けました','good','🩺',false,'c');},
-    lesson:()=>{payCost(a.cost);p.know+=5;if(p.job&&chance(.3)){p.incomePct=Math.min(.99,p.incomePct+.04);recalcIncome();}log(a.label+'に通いました','good','📖',false,'c');},
-    trip:()=>{payCost(a.cost);p.trips=(p.trips||0)+1;p.happy+=8;p.bond+=2;p.know+=1;log(`${pick(['海の見える町','山あいの村','はじめての外国','遠い親せきの家'])}へ旅をしました`,'good','🧳',false,'c');},
+    lesson:()=>{payCost(a.cost);p.know+=5;p.sense+=1;if(p.job&&chance(.3)){p.incomePct=Math.min(.99,p.incomePct+.04);recalcIncome();}log(a.label+'に通いました','good','📖',false,'c');},
+    trip:()=>{payCost(a.cost);p.trips=(p.trips||0)+1;p.sense+=2;p.happy+=8;p.bond+=2;p.know+=1;log(`${pick(['海の見える町','山あいの村','はじめての外国','遠い親せきの家'])}へ旅をしました`,'good','🧳',false,'c');},
     family:()=>{payCost(a.cost);p.bond+=8;p.happy+=3;log(p.parents>0?'親に仕送りをし、顔を見に帰りました':'家族にごちそうをふるまいました','good','💝',false,'c');},
     donate:()=>{payCost(a.cost);p.donated+=a.cost;p.happy+=3;log(`${yen(a.cost)}を寄付しました`,'good','🤲',false,'c');},
     city:()=>{payCost(a.cost);p.moved=true;p.incomePct=Math.min(.99,p.incomePct+.08);if(p.job)recalcIncome();p.bond-=5;log('都会へ引っ越しました','info','🏙',true,'c');},
@@ -1315,13 +1476,13 @@ function doAction(id){
     {label:'災害保険だけ',desc:`毎年 ${yen(m*.03)}`,fn:()=>{use();p.insLife=false;p.insHome=true;log('災害保険だけに入りました','info','🛡',false,'c');}},
     {label:'保険には入らない',fn:()=>{use();p.insLife=false;p.insHome=false;log('保険には入らないことにしました','info','🛡',false,'c');}}]);}
   if(id==='jobhunt'){use();jobOffer('🔍 転職','転職先の候補が見つかりました。',true);}
-  if(id==='migrate'){ask('🌐 海外移住',`豊かな国へ移り住むことを目指します。<div class="q">費用：${yen(a.cost)}<br>成功の見込み：およそ${Math.round((.45+p.know/300+(p.abroad?.2:0)+(p.motto==='challenge'?.1:0))*100)}%<br>家族や友人とは離れることになります</div>`,[
+  if(id==='migrate'){ask('🌐 海外移住',`豊かな国へ移り住むことを目指します。<div class="q">費用：${yen(a.cost)}<br>成功の見込み：およそ${Math.round(migOdds().p*100)}%<br>家族や友人とは離れることになります</div>`,[
     {label:'移住を目指す',fn:()=>{use();payCost(a.cost);p.migrated=true;
-      if(chance(.45+p.know/300+(p.abroad?.2:0)+(p.motto==='challenge'?.1:0))){const d=weightedPick(COUNTRIES.filter(x=>x.gdp>=40),x=>x.pop),old=p.c;p.c=d;
+      roulette('🌐 移住の結果','',migOdds(),{win:'🛬 移住できた！',lose:'🛂 うまくいかなかった…'},w=>{if(w){const d=weightedPick(COUNTRIES.filter(x=>x.gdp>=40),x=>x.pop),old=p.c;p.c=d;
         const nq=buildQx(d,p.sex);p.qx=p.qx.map((v,i)=>i<p.age?v:(v+nq[i])/2);
         p.incomePct=clamp(p.incomePct*.5,.02,.5);if(p.job&&!p.retired)recalcIncome();p.bond-=12;p.happy-=3;
         log(`${old.name}を離れ、${d.name}に移り住みました`,'big','🛬',true,'c');}
-      else{p.happy-=8;log('移住の手続きがうまくいかず、費用だけがかかってしまいました','bad','🛂',true,'f');}}},
+      else{p.happy-=8;log('移住の手続きがうまくいかず、費用だけがかかってしまいました','bad','🛂',true,'f');}});}},
     {label:'やめておく'}]);}
   if(id==='biz'){ask('🚀 商売を始める',`貯金から ${yen(a.cost)} を元手に、自分の商売を始めますか？<div class="q">毎年、大きくもうかることも、赤字になることもあります。知識が高く「仕事に打ち込む」ほど有利です。</div>`,[
     {label:'始める',fn:()=>{use();payCost(a.cost);p.biz=true;p.everBiz=true;log(`${pick(['小さな食堂','雑貨のお店','修理屋','オンラインのお店','運送の仕事'])}を始めました`,'info','🚀',true,'c');}},
@@ -1334,7 +1495,7 @@ function doAction(id){
    ============================================================ */
 function milestone(){
   const alive=others.filter(o=>o.death>=P.age).length,sv=survival(buildQx(P.origin,P.sex),P.age)*100;
-  ask(`🌿 ${P.age}歳の節目`,`<div class="q">健康 ${Math.round(P.health)} ／ 幸福 ${Math.round(P.happy)} ／ 知識 ${Math.round(P.know)} ／ 運動 ${Math.round(P.sport)} ／ 絆 ${Math.round(P.bond)}<br>
+  ask(`🌿 ${P.age}歳の節目`,`<div class="q">健康 ${Math.round(P.health)} ／ 幸福 ${Math.round(P.happy)} ／ 知識 ${Math.round(P.know)} ／ 運動 ${Math.round(P.sport)} ／ 感性 ${Math.round(P.sense)} ／ 絆 ${Math.round(P.bond)}<br>
     暮らしの水準：世界の中で <b>下から${Math.round(worldPct(livingIncome()))}%</b><br>
     ${P.origin.name}で同じ年に生まれた人のうち、いま生きているのは約${sv.toFixed(0)}%</div>
     <p>同じ瞬間に生まれた4人のうち、いまも生きているのは <b>${alive}人</b> です。<br>これまでに自分で選んだこと：<b>${P.choices.length}</b>個 ／ 運命で決まったこと：<b>${P.fates.length}</b>個</p>
@@ -1364,7 +1525,7 @@ function birthReveal(){
     if(++n>(P.gen>1?3:22)){clearInterval(iv);
       const c=P.c,w=Math.min(4,Math.floor(P.wealthP*5));
       const share=(settings.mode==='births'?c.births/COUNTRIES.reduce((a,x)=>a+x.births,0):c.pop/COUNTRIES.reduce((a,x)=>a+x.pop,0))*100;
-      $('#roul').innerHTML=`${REGION_ICON(c.region)} ${c.name}`;
+      $('#roul').innerHTML=`${avatarHtml(P,0)} ${REGION_ICON(c.region)} ${c.name}`;
       $('#bd').innerHTML=`<p><b>${P.name}</b>さんは、${c.region}の<b>${c.name}</b>で<b>${sexWord(P.sex,0)}</b>として生まれました。</p>
         <div class="q">家の暮らし向き：<b>${WEALTH_LABEL[w]}</b>（国内で下から${Math.round(P.wealthP*100)}%）<br>
         家の所得水準：世界の中で下から ${Math.round(worldPct(familyIncome()))}%<br>
@@ -1388,11 +1549,10 @@ function birthReveal(){
 const hueOf=h=>`hsl(${Math.round(210-h*1.8)},65%,${78-h*.15}%)`;
 function focusOptions(){
   if(P.age<6)return[];
-  if(!P.job&&!P.retired)return['study','play','help','health'];
-  const o=['work','study','health','people','rest'];
+  if(!P.job&&!P.retired)return['study','play','create','help','health'];
+  const o=['work','study','health','people','create','rest'];
   return P.retired?o.filter(x=>x!=='work'):o;
 }
-function avatar(){const a=P.age,m=P.sex==='male';if(!P.alive)return'🌷';if(a<3)return'👶';if(a<13)return m?'👦':'👧';if(a<60)return m?'👨':'👩';return m?'👴':'👵';}
 function render(){
   if(!P)return;
   $('#age').textContent=P.age;$('#yearlbl').textContent=`${P.birthYear+P.age}年`;
@@ -1402,9 +1562,9 @@ function render(){
   const fam=[P.married?`${P.partner}さんと結婚`:(P.widowed?'パートナーと死別':'独身'),P.children?`子ども${P.children}人`:''].filter(Boolean).join('・');
   const own=[P.house?`${P.house.icon}${P.house.name}`:'',P.units>0?'📈投資':'',P.insLife?'🩺医療保険':'',P.insHome?'🛡災害保険':'',P.biz?'🚀商売':'',P.side?'🌙副業':'',P.rehired?'🧑‍🔧再就職':'',P.abroad?`✈️${P.abroad.name}留学`:'',EDU_POLICY[P.eduPolicy]?`${EDU_POLICY[P.eduPolicy].icon}${EDU_POLICY[P.eduPolicy].label}`:''].filter(Boolean).join(' ');
   $('#profile').innerHTML=`
-    <div class="who"><div class="avatar">${avatar()}</div><div><div class="nm">${P.name}<span class="genbadge">第${P.gen}世代</span></div>
+    <div class="who"><div class="avatar">${P.alive?avatarHtml(P,P.age,'big'):'🌷'}${activePro()?`<span class="avbadge">${CLUBS[P.pro.club].icon}</span>`:''}</div><div><div class="nm">${P.name}<span class="genbadge">第${P.gen}世代</span></div>
       <small>${REGION_ICON(c.region)} ${c.name}${P.origin!==c?`（${P.origin.name}生まれ）`:''}・${sexWord(P.sex,P.age)}</small></div></div>
-    ${bar('health','❤️ 健康','#d9534f')}${bar('happy','☀️ 幸福','#f0ad4e')}${bar('know','📘 知識','#3b7dd8')}${bar('sport','🏃 運動','#8e5cc8')}${bar('bond','🤝 絆','#5cb85c')}
+    ${bar('health','❤️ 健康','#d9534f')}${bar('happy','☀️ 幸福','#f0ad4e')}${bar('know','📘 知識','#3b7dd8')}${bar('sport','🏃 運動','#8e5cc8')}${bar('sense','🎨 感性','#d6649a')}${bar('bond','🤝 絆','#5cb85c')}
     <dl class="kv">
       <dt>生まれた家</dt><dd>${WEALTH_LABEL[w]}</dd>
       <dt>学び</dt><dd>${status}${P.field&&P.eduLevel>=4?`（${FIELDS[P.field].label}）`:''}</dd>
@@ -1446,7 +1606,7 @@ function render(){
   $('#era').innerHTML=(P.eraSeen||[]).length?P.eraSeen.slice(-8).reverse().map(e=>`<li><b>${e.year}年</b> ${e.icon} ${e.text}</li>`).join(''):'<li><small>まだ大きな出来事は起きていません</small></li>';
   // スマホ用のステータス帯
   const mb=(v,col,ic)=>`<div>${ic} ${Math.round(v)}<div class="bar"><i style="width:${v}%;background:${col}"></i></div></div>`;
-  $('#mstat').innerHTML=mb(P.health,'#d9534f','❤️')+mb(P.happy,'#f0ad4e','☀️')+mb(P.know,'#3b7dd8','📘')+mb(P.sport,'#8e5cc8','🏃')+mb(P.bond,'#5cb85c','🤝')+`<div class="mm">💰${yen(P.savings)}</div>`;
+  $('#mstat').innerHTML=mb(P.health,'#d9534f','❤️')+mb(P.happy,'#f0ad4e','☀️')+mb(P.know,'#3b7dd8','📘')+mb(P.sport,'#8e5cc8','🏃')+mb(P.sense,'#d6649a','🎨')+mb(P.bond,'#5cb85c','🤝')+`<div class="mm">💰${yen(P.savings)}</div>`;
   // 4人
   $('#others').innerHTML=others.map((o,i)=>{const gone=o.death<P.age,n=otherNews(o);
     const canHelp=!gone&&P.alive&&P.age>=15&&!P.actUsed;
@@ -1536,7 +1696,7 @@ function continueAs(i){
   begin(k.name,{c:k.c,sex:k.sex,wealthP:inh.wealthP,year:P.birthYear+k.bornAt,gen:P.gen+1,lineage:P.lineage,eduBonus:inh.eduBonus,
     legacy:inh.legacy,parentDeathAge:P.age-k.bornAt,parentName:P.name,firstGenCode:P.firstGenCode,
     motto:(document.querySelector('input[name=motto]:checked')||{}).value||null,mottoFrom:null,bond:P.bond+((EDU_POLICY[P.eduPolicy]||{}).bond||0)+(k.bondAdj||0),
-    era:P.era,gratitude:P.gratitude,sibs:P.kids.filter((x,j)=>j!==i).map(x=>({name:x.name,sex:x.sex,older:x.bornAt<k.bornAt})),helpedCount:P.helpedCount,helpedYears:P.helpedYears});
+    era:P.era,gratitude:P.gratitude,av:P.av,sibs:P.kids.filter((x,j)=>j!==i).map(x=>({name:x.name,sex:x.sex,older:x.bornAt<k.bornAt})),helpedCount:P.helpedCount,helpedYears:P.helpedYears});
 }
 function showFamily(){
   const L=P.lineage,first=L[0],last=L[L.length-1];
@@ -1570,7 +1730,7 @@ function showEnd(){
   for(let i=0;i<cells;i++){const y=P.years.find(v=>v.age===i);mh+=`<div title="${i}歳" style="background:${y?(y.end?'#999':hueOf(y.happy)):'#efe8da'}">${y&&y.icon?y.icon:''}</div>`;}
   const text=`Life Relay ─ 生命の巡り ─ で、${o.name}に${sexWord(P.sex,0)}として生まれ、${P.age}歳まで生きました。自分で選んだこと${P.choices.length}個、運命で決まったこと${P.fates.length}個。${P.code?`同じ生まれのコード：${showCode(P.code)}`:''}`;
   $('#end-screen').innerHTML=`
-    <div class="card epitaph"><div class="icon">🌷</div><h1>${P.name}</h1>
+    <div class="card epitaph"><div class="icon">${avatarHtml(P,P.age,'big')} 🌷</div><h1>${P.name}</h1>
       <p>${P.birthYear}年 ${o.name}生まれ — ${P.birthYear+P.age}年 ${c!==o?c.name+'にて':''}没<br>享年 <b>${P.age}歳</b>・${P.cause}</p></div>
     <div class="facts">
       <div class="fact"><span>生まれた国の平均寿命</span><b>${o.le}歳</b></div>
@@ -1640,7 +1800,7 @@ function showResume(){
 }
 function resumeGame(){
   const d=loadSave();if(!d)return;
-  P=d.P;if(typeof P.sport!=='number')P.sport=30;others=d.others.map(o=>({...o,q:buildQx(o.c,o.sex)}));G.market=d.market;Object.assign(settings,d.settings);
+  P=d.P;if(typeof P.sport!=='number')P.sport=30;if(typeof P.sense!=='number')P.sense=30;if(!P.av)P.av={...settings.av};others=d.others.map(o=>({...o,q:buildQx(o.c,o.sex)}));G.market=d.market;Object.assign(settings,d.settings);
   modalQueue=[];modalOpen=false;skipping=false;
   $('#log').innerHTML='';P.log.forEach(logLi);
   $('#title-screen').hidden=true;$('#end-screen').hidden=true;$('#game').hidden=false;
@@ -1656,7 +1816,7 @@ $('#resume-btn').onclick=resumeGame;
 function begin(name,inh=null,code=null){
   settings.mode=document.querySelector('input[name=mode]:checked').value;
   settings.yearMs=40000; // 1×で1年＝約40秒、2×で約20秒
-  settings.gentle=$('#gentle').checked;
+  settings.gentle=$('#gentle').checked;settings.fx=$('#fx').checked;
   modalQueue=[];modalOpen=false;skipping=false;
   newLife(name,inh,code);
   speed=1;document.querySelectorAll('#speed button[data-s]').forEach(x=>x.classList.toggle('on',x.dataset.s==='1'));
@@ -1670,7 +1830,7 @@ $('#start').onclick=()=>{
   begin(($('#name').value||'').trim()||'名無し',null,code);
 };
 $('#name').addEventListener('keydown',e=>{if(e.key==='Enter')$('#start').click();});
-showPast();showResume();
+initAvatarPicker();showPast();showResume();
 </script>
 </body>
 </html>
